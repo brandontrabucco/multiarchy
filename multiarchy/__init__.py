@@ -9,6 +9,7 @@ def nested_apply(
     function,
     *structures
 ):
+    # apply a function to a nested structure of objects
     if (isinstance(structures[0], np.ndarray) or
             isinstance(structures[0], tf.Tensor) or not (
             isinstance(structures[0], list) or
@@ -53,3 +54,29 @@ def discounted_sum(
     weights = tf.math.cumprod(weights, axis=1, exclusive=True)
     return tf.math.cumsum(
         terms * weights, axis=1, reverse=True) / weights
+
+
+def flatten(
+        structures
+):
+    # flatten a nested structure of tensors to a list
+    if (isinstance(structures, np.ndarray) or
+            isinstance(structures, tf.Tensor) or not (
+            isinstance(structures, list) or
+            isinstance(structures, tuple) or
+            isinstance(structures, set) or
+            isinstance(structures, dict))):
+        return [structures]
+
+    elif (isinstance(structures, list) or isinstance(structures, tuple) or
+          isinstance(structures, set)):
+        output = []
+        for s in structures:
+            output.extend(flatten(s))
+        return output
+
+    elif isinstance(structures, dict):
+        output = []
+        for s in structures.values():
+            output.extend(flatten(s))
+        return output

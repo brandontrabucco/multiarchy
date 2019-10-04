@@ -13,7 +13,23 @@ class Agent(ABC):
         # a single agent in a graph of many agents
         self.time_skip = time_skip
         self.action = None
+        self.stack = None
         self.goal = None
+
+    @abstractmethod
+    def get_weights(
+            self,
+    ):
+        # return a nested structure of weights for the hierarchy
+        return NotImplemented
+
+    @abstractmethod
+    def set_weights(
+            self,
+            weights
+    ):
+        # assign a nested structure of weights for the hierarchy
+        return NotImplemented
 
     @abstractmethod
     def react(

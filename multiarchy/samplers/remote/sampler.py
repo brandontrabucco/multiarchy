@@ -5,26 +5,36 @@ import numpy as np
 import ray
 
 
-class Sampler(object):
+@ray.remote
+class RemoteSampler(object):
 
     def __init__(
             self,
             create_env,
+            create_agent,
             max_path_length=1000,
             logger=None,
             logging_prefix="sampler/"
     ):
         # parameters to control sampling from the environment.
         self.env = create_env()
+        self.agent = create_agent()
         self.max_path_length = max_path_length
         self.logger = logger
         self.logging_prefix = logging_prefix
 
+    def set_weights(
+            self,
+            weights
+    ):
+        # set the weights for the agent in this sampler
+        self.agent.set_weights(weights)
+
     def collect(
             self,
-            agent,
             min_num_steps_to_collect,
             deterministic=False,
+            save_data=True,
             render=False,
             render_kwargs=None
     ):
@@ -33,8 +43,8 @@ class Sampler(object):
             render_kwargs = {}
 
         # store data to pass to the replay buffer
-        paths = []
         all_returns = []
+        paths = []
 
         # start collecting many trajectories
         num_steps_collected = 0
@@ -54,7 +64,7 @@ class Sampler(object):
 
                 # check if the environment has a goal and send it in
                 num_steps_collected += 1
-                atoms_t, actions_t, goals_t = agent.react(
+                atoms_t, actions_t, goals_t = self.agent.react(
                     observation_t,
                     time_step,
                     observation_t["goal"] if "goal" in observation_t else [],
@@ -79,15 +89,16 @@ class Sampler(object):
                     break
 
             # save the episode into a list to send to the replay buffer
-            paths.append((observations, actions, rewards))
             all_returns.append(path_return)
+            if save_data:
+                paths.append((observations, actions, rewards))
 
         # log the average return achieved by the agent for these steps
         if self.logger is not None:
-            self.logger.record.remote(
+            self.logger.record(
                 self.logging_prefix + "return_mean", np.mean(all_returns))
-            self.logger.record.remote(
+            self.logger.record(
                 self.logging_prefix + "return_std", np.std(all_returns))
 
-
-RemoteSampler = ray.remote(Sampler)
+        # return the paths and the number of steps collected so far
+        return paths, num_steps_collected

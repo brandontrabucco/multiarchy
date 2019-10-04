@@ -16,6 +16,20 @@ class HierarchyAgent(Agent):
         # a struct to store key methods for a hierarchy level
         self.agents = agents
 
+    def get_weights(
+            self,
+    ):
+        # return a nested structure of weights for the hierarchy
+        return [agent.get_weights() for agent in self.agents]
+
+    def set_weights(
+            self,
+            weights
+    ):
+        # assign a nested structure of weights for the hierarchy
+        for w, agent in zip(weights, self.agents):
+            agent.set_weights(w)
+
     def react(
             self,
             observation,
@@ -27,19 +41,20 @@ class HierarchyAgent(Agent):
         if time_step % self.time_skip == 0:
 
             # get actions from the set of agents
-            self.goals = []
-            self.action = []
+            self.action = goal
+            self.stack = []
+            self.goal = []
+
             for agent in self.agents:
-                self.goals.append(goal)
-                action = agent.react(
+                result = agent.react(
                     observation,
                     time_step,
-                    goal,
+                    self.action,
                     deterministic=deterministic)
-                self.action.append(action)
 
-                # high level actions are low level goals
-                goal = action
+                self.action = result[0]
+                self.stack.append(result[1])
+                self.goal.append(result[2])
 
         # return the actions that were sampled by all the agents
-        return self.action[-1], self.action, self.goals
+        return self.action, self.stack, self.goal
