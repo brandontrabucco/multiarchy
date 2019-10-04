@@ -2,6 +2,7 @@
 
 
 from multiarchy.envs.normalized_env import NormalizedEnv
+from multiarchy.distributions.tanh_gaussian import TanhGaussian
 from multiarchy.distributions.gaussian import Gaussian
 from multiarchy.networks import dense
 
@@ -12,9 +13,78 @@ from multiarchy.agents.policy_agent import PolicyAgent
 from multiarchy.replay_buffers.step_replay_buffer import StepReplayBuffer
 from multiarchy.loggers.tensorboard_logger import TensorboardLogger
 from multiarchy.samplers.sampler import Sampler
+from multiarchy.algorithms.sac import SAC
 
-from gym.envs.mujoco.humanoid import HumanoidEnv
+from gym.envs.mujoco.half_cheetah import HalfCheetahEnv
 import ray
+
+
+def run_experiment(
+        env_class,
+        env_kwargs=None,
+        observation_key="observation",
+):
+    # run an experiment with multiple agents
+    if env_kwargs is None:
+        env_kwargs = {}
+
+    # initialize the cluster of cpu cores
+    ray.init()
+
+    # a function that creates the training environment
+    def create_env():
+        return NormalizedEnv(env_class, **env_kwargs)
+
+    # create a replay buffer to store data
+    replay_buffer = StepReplayBuffer(max_num_steps=1000000)
+
+    # create a logging instance
+    logger = TensorboardLogger(replay_buffer, "./")
+
+    # create policies for each level in the hierarchy
+    policy = TanhGaussian(dense(observation_dim, action_dim * 2), std=None)
+    qf1 = TanhGaussian(dense(observation_dim, 1), std=1.0)
+    qf2 = TanhGaussian(dense(observation_dim, 1), std=1.0)
+    target_qf1 = TanhGaussian(dense(observation_dim, 1), std=1.0)
+    target_qf2 = TanhGaussian(dense(observation_dim, 1), std=1.0)
+
+    # train the agent using soft actor critic
+    algorithm = SAC(
+        policy,
+        qf1,
+        qf2,
+        target_qf1,
+        target_qf2,
+        replay_buffer,
+        reward_scale=1.0,
+        discount=0.99,
+        initial_alpha=0.1,
+        alpha_optimizer_kwargs=dict(lr=0.0003),
+        target_entropy=(-action_dim),
+        logger=logger)
+
+    # create a single agent to manage the hierarchy
+    agent = PolicyAgent(policy, algorithm=algorithm)
+
+    # create an agent to interact with an environment
+    def create_agent():
+
+        # create policies for each level in the hierarchy
+        policy = TanhGaussian(dense(observation_dim, action_dim * 2))
+
+        # create a single agent to manage the hierarchy
+        return PolicyAgent(policy)
+
+    # make a sampler to collect data to train the hierarchy
+    sampler = Sampler(
+        create_env,
+        create_agent,
+        max_path_length=1000,
+        logger=logger,
+        logging_prefix="sampler/")
+
+
+
 
 
 if __name__ == "__main__":
