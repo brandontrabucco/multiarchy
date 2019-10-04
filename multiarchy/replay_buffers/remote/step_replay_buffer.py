@@ -12,14 +12,12 @@ class RemoteStepReplayBuffer(ReplayBuffer):
 
     def __init__(
             self,
-            max_num_steps=1000000,
-            selector=None
+            max_num_steps=1000000
     ):
         ReplayBuffer.__init__(self)
 
         # parameters to control how the buffer is created and managed
         self.max_num_steps = max_num_steps
-        self.selector = selector if selector is not None else (lambda x: x)
 
     def inflate_backend(
             self,
@@ -62,7 +60,7 @@ class RemoteStepReplayBuffer(ReplayBuffer):
             nested_apply(self.insert_backend, self.observations, o)
             nested_apply(self.insert_backend, self.actions, a)
             self.insert_backend(self.rewards, r)
-            self.insert_backend(self.terminals, 1.0 if time_step < len(observations) - 1 else 0.0)
+            self.insert_backend(self.terminals, time_step)
 
             # increment the head and size
             self.head = (self.head + 1) % self.max_num_steps
@@ -71,24 +69,40 @@ class RemoteStepReplayBuffer(ReplayBuffer):
 
     def sample(
             self,
-            batch_size
+            batch_size,
+            time_skip=1,
+            hierarchy_selector=(lambda x: x)
     ):
-        # determine which steps to sample from
-        idx = np.random.choice(self.size, size=batch_size, replace=(self.size < batch_size))
-        next_idx = (idx + 1) % self.max_num_steps
+        # sample transition for a hierarchy of policies
+        idx = np.random.choice(
+            self.size, size=batch_size, replace=(self.size < batch_size))
+        idx = idx - self.terminals[idx, ...].astype(np.int32) % time_skip
+        next_idx = (idx + time_skip + 1) % self.max_num_steps
+        intermediate_ids = [(idx + i) % self.max_num_steps for i in range(time_skip)]
 
-        def sample(data):
+        def inner_sample(data):
             return data[idx, ...]
 
-        def sample_next(data):
+        def inner_sample_last(data):
             return data[next_idx, ...]
 
-        # sample current batch from a nested samplers agents
-        observations = nested_apply(sample, self.selector(self.observations))
-        actions = nested_apply(sample, self.actions)
-        rewards = sample(self.rewards)
-        next_observations = nested_apply(sample_next, self.selector(self.observations))
-        terminals = sample(self.terminals)
+        # sample current batch from a nested structure
+        observations = nested_apply(inner_sample, self.observations)
+        observations["goal"] = hierarchy_selector(observations["goal"])
+        actions = hierarchy_selector(nested_apply(inner_sample, self.actions))
+
+        # sum the rewards across the horizon where valid
+        rewards = 0.0
+        for j in intermediate_ids:
+            rewards = rewards + (self.rewards[j, ...] * np.greater_equal(
+                self.terminals[j, ...], self.terminals[idx, ...]).astype(np.float32))
+
+        # sample current batch from a nested structure
+        next_observations = nested_apply(inner_sample_last, self.observations)
+        next_observations["goal"] = hierarchy_selector(next_observations["goal"])
+        terminals = np.greater_equal(
+            inner_sample_last(self.terminals),
+            inner_sample(self.terminals)).astype(np.float32)
 
         # return the samples in a batch
         return observations, actions, rewards, next_observations, terminals

@@ -32,6 +32,22 @@ class Distribution(ABC):
             self.tau * w1 + (1.0 - self.tau) * w2
             for w1, w2 in zip(weights, self.model.get_weights())])
 
+    def compute_gradients(
+            self,
+            loss,
+            tape
+    ):
+        # apply the gradient update rule to this model
+        return tape.gradient(loss, self.model.trainable_variables)
+
+    def apply_gradients(
+            self,
+            gradients
+    ):
+        # apply the gradient update rule to this model
+        self.optimizer.apply_gradients(zip(
+            gradients, self.model.trainable_variables))
+
     def minimize(
             self,
             loss_function

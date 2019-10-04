@@ -11,13 +11,11 @@ class PathReplayBuffer(ReplayBuffer):
     def __init__(
             self,
             max_path_length=1000,
-            max_num_paths=1000,
-            selector=None
+            max_num_paths=1000
     ):
         self.replay_buffer = RemotePathReplayBuffer.remote(
             max_path_length=max_path_length,
-            max_num_paths=max_num_paths,
-            selector=selector)
+            max_num_paths=max_num_paths)
 
     def get_total_paths(
             self
@@ -58,7 +56,10 @@ class PathReplayBuffer(ReplayBuffer):
 
     def sample(
             self,
-            batch_size
+            batch_size,
+            time_skip=1,
+            hierarchy_selector=(lambda x: x)
     ):
         # determine which steps to sample from
-        return ray.get(self.replay_buffer.sample.remote(batch_size))
+        return ray.get(self.replay_buffer.sample.remote(
+            batch_size, time_skip=time_skip, hierarchy_selector=hierarchy_selector))

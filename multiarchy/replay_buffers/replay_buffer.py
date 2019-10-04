@@ -74,6 +74,8 @@ class ReplayBuffer(ABC):
     @abstractmethod
     def sample(
             self,
-            batch_size
+            batch_size,
+            time_skip=1,
+            hierarchy_selector=(lambda x: x)
     ):
         return NotImplemented

@@ -16,6 +16,16 @@ class HierarchyAgent(Agent):
         # a struct to store key methods for a hierarchy level
         self.agents = agents
 
+    def train(
+            self,
+            iteration,
+            hierarchy_selector=(lambda x: x)
+    ):
+        # train the algorithm using this replay buffer
+        Agent.train(self, iteration, hierarchy_selector=hierarchy_selector)
+        for i, agent in enumerate(self.agents):
+            agent.train(iteration, hierarchy_selector=(lambda x: hierarchy_selector(x)[i]))
+
     def get_weights(
             self,
     ):

@@ -15,6 +15,7 @@ from multiarchy.samplers.sampler import Sampler
 
 from gym.envs.mujoco.humanoid import HumanoidEnv
 import ray
+import time
 
 
 if __name__ == "__main__":
@@ -45,6 +46,9 @@ if __name__ == "__main__":
             MultiAgent(PolicyAgent(mid_policy), time_skip=5),
             PolicyAgent(low_policy, time_skip=1))
 
+    # create an agent in the main thread
+    agent = create_agent()
+
     # create a replay buffer to store data
     replay_buffer = StepReplayBuffer(max_num_steps=1000000)
 
@@ -65,10 +69,8 @@ if __name__ == "__main__":
         deterministic=False,
         render=True)
 
+    sampler.set_weights(agent.get_weights())
+
     # insert the data into a replay buffer
     for path in paths:
         replay_buffer.insert_path(*path)
-
-    batch = replay_buffer.sample(32)
-
-    print(num_steps)

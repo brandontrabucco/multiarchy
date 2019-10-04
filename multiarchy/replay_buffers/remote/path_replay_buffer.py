@@ -13,15 +13,13 @@ class RemotePathReplayBuffer(ReplayBuffer):
     def __init__(
             self,
             max_path_length=1000,
-            max_num_paths=1000,
-            selector=None
+            max_num_paths=1000
     ):
         ReplayBuffer.__init__(self)
 
         # control the storage size of the replay buffer
         self.max_path_length = max_path_length
         self.max_num_paths = max_num_paths
-        self.selector = selector if selector is not None else (lambda x: x)
 
     def inflate_backend(
             self,
@@ -73,20 +71,36 @@ class RemotePathReplayBuffer(ReplayBuffer):
 
     def sample(
             self,
-            batch_size
+            batch_size,
+            time_skip=1,
+            hierarchy_selector=(lambda x: x)
     ):
         # determine which steps to sample from
-        idx = np.random.choice(self.size, size=batch_size, replace=(self.size < batch_size))
+        idx = np.random.choice(
+            self.size, size=batch_size, replace=(self.size < batch_size))
 
         def inner_sample(data):
-            return data[idx, ...]
+            return data[idx, ::time_skip, ...]
 
         # sample current batch from a nested samplers agents
-        observations = nested_apply(inner_sample, self.selector(self.observations))
-        actions = nested_apply(inner_sample, self.actions)
-        rewards = inner_sample(self.rewards)
-        terminals = (np.arange(self.max_path_length)[None, :] <= inner_sample(
-            self.terminals)[:, None]).astype(np.float32)
+        observations = nested_apply(inner_sample, self.observations)
+        observations["goal"] = hierarchy_selector(observations["goal"])
+        actions = hierarchy_selector(nested_apply(inner_sample, self.actions))
+
+        # add rewards from the duration of time skip
+        rewards = np.zeros_like(self.rewards[idx, ::time_skip, ...])
+        for j in range(time_skip):
+            term_to_add = self.rewards[idx, j::time_skip, ...] * np.less_equal(
+                np.arange(self.max_path_length)[None, j::time_skip],
+                self.terminals[idx, None]).astype(np.float32)
+            while term_to_add.shape[1] < rewards.shape[1]:
+                term_to_add = np.pad(term_to_add, [[0, 0], [0, 1]])
+            rewards = rewards + term_to_add
+
+        # determine if the step that has been sampled is valid
+        terminals = np.less_equal(
+            np.arange(self.max_path_length)[None, ::time_skip],
+            self.terminals[idx, None]).astype(np.float32)
 
         # return the samples in a batch
         return observations, actions, rewards, terminals

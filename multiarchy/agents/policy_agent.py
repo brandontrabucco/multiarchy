@@ -11,10 +11,11 @@ class PolicyAgent(Agent):
     def __init__(
             self,
             policy,
-            time_skip=1,
             input_selector=(lambda x: x["observation"]),
+            time_skip=1,
+            algorithm=None
     ):
-        Agent.__init__(self, time_skip=time_skip)
+        Agent.__init__(self, time_skip=time_skip, algorithm=algorithm)
 
         # story the policy and a selector into the observation dictionary
         self.policy = policy
