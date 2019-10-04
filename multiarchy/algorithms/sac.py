@@ -46,7 +46,7 @@ class SAC(Algorithm):
         self.target_qf2 = target_qf2
 
         # attributes for computing entropy tuning
-        self.log_alpha = tf.log(tf.fill([1], initial_alpha))
+        self.log_alpha = tf.math.log(tf.fill([1], initial_alpha))
         if alpha_optimizer_kwargs is None:
             alpha_optimizer_kwargs = {}
         self.alpha_optimizer = alpha_optimizer(

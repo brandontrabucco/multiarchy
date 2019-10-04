@@ -48,7 +48,7 @@ class Algorithm(ABC):
     ):
         return NotImplemented
 
-    def train(
+    def fit(
             self,
             iteration,
             time_skip=1,

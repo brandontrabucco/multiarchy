@@ -38,7 +38,7 @@ class StepReplayBuffer(ReplayBuffer):
             state
     ):
         # load the replay buffer from a dictionary
-        self.replay_buffer.from_dict.remote(state)
+        ray.get(self.replay_buffer.from_dict.remote(state))
 
     def insert_path(
             self,
@@ -47,10 +47,10 @@ class StepReplayBuffer(ReplayBuffer):
             rewards
     ):
         # insert a path into the replay buffer
-        self.replay_buffer.insert_path.remote(
+        ray.get(self.replay_buffer.insert_path.remote(
             observations,
             actions,
-            rewards)
+            rewards))
 
     def sample(
             self,
