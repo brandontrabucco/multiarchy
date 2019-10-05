@@ -23,6 +23,13 @@ class Distribution(ABC):
         self.optimizer_kwargs = optimizer_kwargs
         self.optimizer = optimizer_class(**optimizer_kwargs)
 
+    def __call__(
+            self,
+            *args
+    ):
+        # wrapper function to call the keras model
+        return self.model(*args)
+
     def soft_update(
             self,
             weights

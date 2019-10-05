@@ -23,7 +23,7 @@ class PPO(Algorithm):
             input_selector=(lambda x: x["observation"]),
             batch_size=32,
             update_every=1,
-            update_after=1,
+            update_after=0,
             logger=None,
             logging_prefix="policy_gradient/"
     ):
@@ -69,11 +69,11 @@ class PPO(Algorithm):
 
                 # compute the value function loss
                 discounted_returns = discounted_sum(rewards, self.discount)
-                self.record("discounted_returns", tf.reduce_mean(discounted_returns))
+                self.record("discounted_returns", tf.reduce_mean(discounted_returns).numpy())
                 values = self.vf(observations)[..., 0]
-                self.record("values", tf.reduce_mean(values))
+                self.record("values", tf.reduce_mean(values).numpy())
                 vf_loss = tf.losses.mean_squared_error(discounted_returns, values)
-                self.record("vf_loss", tf.reduce_mean(vf_loss))
+                self.record("vf_loss", tf.reduce_mean(vf_loss).numpy())
 
             # back prop into the value function
             self.vf.apply_gradients(
@@ -87,14 +87,14 @@ class PPO(Algorithm):
                 # compute generalized advantages
                 delta_v = (rewards - values +
                            self.discount * tf.pad(values, [[0, 0], [0, 1]])[:, 1:])
-                self.record("delta_v", tf.reduce_mean(delta_v))
+                self.record("delta_v", tf.reduce_mean(delta_v).numpy())
                 advantages = discounted_sum(delta_v, self.discount * self.lamb)
-                self.record("advantages", tf.reduce_mean(advantages))
+                self.record("advantages", tf.reduce_mean(advantages).numpy())
 
                 # compute the importance sampling policy ratio
                 policy_ratio = tf.exp(self.policy.log_prob(actions, observations) -
                                       self.old_policy.log_prob(actions, observations))
-                self.record("policy_ratio", tf.reduce_mean(policy_ratio))
+                self.record("policy_ratio", tf.reduce_mean(policy_ratio).numpy())
 
                 # compute the clipped surrogate loss function
                 policy_loss = -tf.reduce_mean(
@@ -102,7 +102,7 @@ class PPO(Algorithm):
                         advantages * policy_ratio,
                         advantages * tf.clip_by_value(
                             policy_ratio, 1 - self.epsilon, 1 + self.epsilon)))
-                self.record("policy_loss", tf.reduce_mean(policy_loss))
+                self.record("policy_loss", tf.reduce_mean(policy_loss).numpy())
 
             # back prop into the policy
             self.policy.apply_gradients(

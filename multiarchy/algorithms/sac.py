@@ -24,7 +24,7 @@ class SAC(Algorithm):
             input_selector=(lambda x: x["observation"]),
             batch_size=32,
             update_every=1,
-            update_after=1,
+            update_after=0,
             logger=None,
             logging_prefix="sac/"
     ):
@@ -46,7 +46,7 @@ class SAC(Algorithm):
         self.target_qf2 = target_qf2
 
         # attributes for computing entropy tuning
-        self.log_alpha = tf.math.log(tf.fill([1], initial_alpha))
+        self.log_alpha = tf.Variable(tf.math.log(tf.fill([1], initial_alpha)))
         if alpha_optimizer_kwargs is None:
             alpha_optimizer_kwargs = {}
         self.alpha_optimizer = alpha_optimizer(
@@ -70,56 +70,56 @@ class SAC(Algorithm):
             terminals
     ):
         # select from the observation dictionary
-        observations = self.input_selector(observations)
-        next_observations = self.input_selector(next_observations)
+        observations = tf.constant(self.input_selector(observations))
+        next_observations = tf.constant(self.input_selector(next_observations))
 
         # build a tape to collect gradients from the policy and critics
         with tf.GradientTape(persistent=True) as tape:
             alpha = tf.exp(self.log_alpha)
-            self.record("alpha", tf.reduce_mean(alpha))
+            self.record("alpha", tf.reduce_mean(alpha).numpy())
 
             # sample actions from current policy
             sampled_actions, log_pi = self.policy.sample(observations)
-            self.record("entropy", tf.reduce_mean(-log_pi))
+            self.record("entropy", tf.reduce_mean(-log_pi).numpy())
             next_sampled_actions, next_log_pi = self.policy.sample(next_observations)
-            self.record("next_entropy", tf.reduce_mean(-next_log_pi))
+            self.record("next_entropy", tf.reduce_mean(-next_log_pi).numpy())
 
             # build q function target value
             inputs = tf.concat([next_observations, next_sampled_actions], -1)
             target_qf1_value = self.target_qf1(inputs)[..., 0]
-            self.record("target_qf1_value", tf.reduce_mean(target_qf1_value))
+            self.record("target_qf1_value", tf.reduce_mean(target_qf1_value).numpy())
             target_qf2_value = self.target_qf2(inputs)[..., 0]
-            self.record("target_qf2_value", tf.reduce_mean(target_qf2_value))
+            self.record("target_qf2_value", tf.reduce_mean(target_qf2_value).numpy())
             qf_targets = tf.stop_gradient(
                 self.reward_scale * rewards + terminals * self.discount * (
                         tf.minimum(target_qf1_value,
                                    target_qf2_value) - alpha * next_log_pi))
-            self.record("qf_targets", tf.reduce_mean(qf_targets))
+            self.record("qf_targets", tf.reduce_mean(qf_targets).numpy())
 
             # build q function loss
             inputs = tf.concat([observations, actions], -1)
             qf1_value = self.qf1(inputs)[..., 0]
-            self.record("qf1_value", tf.reduce_mean(qf1_value))
+            self.record("qf1_value", tf.reduce_mean(qf1_value).numpy())
             qf2_value = self.qf2(inputs)[..., 0]
-            self.record("qf2_value", tf.reduce_mean(qf2_value))
+            self.record("qf2_value", tf.reduce_mean(qf2_value).numpy())
             qf1_loss = tf.reduce_mean(tf.keras.losses.logcosh(qf_targets, qf1_value))
-            self.record("qf1_loss", qf1_loss)
+            self.record("qf1_loss", qf1_loss.numpy())
             qf2_loss = tf.reduce_mean(tf.keras.losses.logcosh(qf_targets, qf2_value))
-            self.record("qf2_loss", qf2_loss)
+            self.record("qf2_loss", qf2_loss.numpy())
 
             # build policy loss
             inputs = tf.concat([observations, sampled_actions], -1)
             policy_qf1_value = self.qf1(inputs)[..., 0]
-            self.record("policy_qf1_value", tf.reduce_mean(policy_qf1_value))
+            self.record("policy_qf1_value", tf.reduce_mean(policy_qf1_value).numpy())
             policy_qf2_value = self.qf2(inputs)[..., 0]
-            self.record("policy_qf2_value", tf.reduce_mean(policy_qf2_value))
+            self.record("policy_qf2_value", tf.reduce_mean(policy_qf2_value).numpy())
             policy_loss = tf.reduce_mean(alpha * log_pi - tf.minimum(
                 policy_qf1_value, policy_qf2_value))
-            self.record("policy_loss", policy_loss)
+            self.record("policy_loss", policy_loss.numpy())
 
             alpha_loss = -tf.reduce_mean(self.log_alpha * tf.stop_gradient(
                 log_pi + self.target_entropy))
-            self.record("alpha_loss", alpha_loss)
+            self.record("alpha_loss", alpha_loss.numpy())
 
         # back prop gradients
         self.qf1.apply_gradients(
@@ -128,8 +128,8 @@ class SAC(Algorithm):
             self.qf2.compute_gradients(qf2_loss, tape))
         self.policy.apply_gradients(
             self.policy.compute_gradients(policy_loss, tape))
-        self.alpha_optimizer.apply_gradients([
-            tape.gradient(alpha_loss, [self.log_alpha]), self.log_alpha])
+        self.alpha_optimizer.apply_gradients(
+            zip(tape.gradient(alpha_loss, [self.log_alpha]), [self.log_alpha]))
 
         # soft update target parameters
         self.target_qf1.soft_update(self.qf1.get_weights())

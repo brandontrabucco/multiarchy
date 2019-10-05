@@ -11,7 +11,7 @@ class Algorithm(ABC):
             replay_buffer,
             batch_size=32,
             update_every=1,
-            update_after=1,
+            update_after=0,
             logger=None,
             logging_prefix="algorithm/"
     ):
@@ -30,7 +30,7 @@ class Algorithm(ABC):
         self.logging_prefix = logging_prefix
 
         # necessary for update_every and update_after
-        self.last_update_iteration = 0
+        self.last_update_iteration = -1
 
     def record(
             self,
@@ -63,6 +63,7 @@ class Algorithm(ABC):
             # get a batch of data from the replay buffer
             batch_of_data = self.replay_buffer.sample(
                 self.batch_size, time_skip=time_skip, hierarchy_selector=hierarchy_selector)
+            print("d2")
 
             # samples are pulled from the replay buffer on the fly
             self.update_algorithm(*batch_of_data)

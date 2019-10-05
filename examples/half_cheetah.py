@@ -1,16 +1,15 @@
 """Author: Brandon Trabucco, Copyright 2019, MIT License"""
 
 
-from multiarchy.sac import sac, sac_variant
+from multiarchy.sac import sac
 from gym.envs.mujoco.half_cheetah import HalfCheetahEnv
-from copy import deepcopy
 import ray
 
 
+@ray.remote
 def run_experiment(experiment_id):
 
     # change the logging directory and set parameters
-    variant = deepcopy(sac_variant)
     variant = dict(
         max_num_steps=1000000,
         logging_dir="half_cheetah/sac/{}/".format(experiment_id),
@@ -35,5 +34,4 @@ if __name__ == "__main__":
     ray.init()
 
     # run several experiments with the same parameters
-    num_seeds = 1
-    run_experiment(0)
+    ray.get([run_experiment.remote(seed) for seed in range(5)])

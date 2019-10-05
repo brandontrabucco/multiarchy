@@ -10,6 +10,7 @@ from multiarchy.replay_buffers.step_replay_buffer import StepReplayBuffer
 from multiarchy.loggers.tensorboard_logger import TensorboardLogger
 from multiarchy.samplers.sampler import Sampler
 from multiarchy.algorithms.sac import SAC
+import ray
 
 
 sac_variant = dict(
@@ -25,6 +26,9 @@ sac_variant = dict(
     num_steps_per_eval=10000,
     num_epochs_per_eval=1,
     num_epochs=10000)
+
+
+# TODO: the core dump is most likely due to an error in hierarchy_selector
 
 
 def sac(

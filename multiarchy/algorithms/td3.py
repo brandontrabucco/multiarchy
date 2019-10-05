@@ -23,7 +23,7 @@ class SAC(Algorithm):
             input_selector=(lambda x: x["observation"]),
             batch_size=32,
             update_every=1,
-            update_after=1,
+            update_after=0,
             logger=None,
             logging_prefix="sac/"
     ):
@@ -81,34 +81,34 @@ class SAC(Algorithm):
             # build the q function target value
             inputs = tf.concat([next_observations, next_noisy_actions], -1)
             target_qf1_value = self.target_qf1(inputs)[..., 0]
-            self.record("target_qf1_value", tf.reduce_mean(target_qf1_value))
+            self.record("target_qf1_value", tf.reduce_mean(target_qf1_value).numpy())
             target_qf2_value = self.target_qf2(inputs)[..., 0]
-            self.record("target_qf2_value", tf.reduce_mean(target_qf2_value))
+            self.record("target_qf2_value", tf.reduce_mean(target_qf2_value).numpy())
             qf_targets = tf.stop_gradient(
                 self.reward_scale * rewards + terminals * self.discount * (
                     tf.minimum(target_qf1_value, target_qf2_value)))
-            self.record("qf_targets", tf.reduce_mean(qf_targets))
+            self.record("qf_targets", tf.reduce_mean(qf_targets).numpy())
 
             # build the q function loss
             inputs = tf.concat([observations, actions], -1)
             qf1_value = self.qf1(inputs)[..., 0]
-            self.record("qf1_value", tf.reduce_mean(qf1_value))
+            self.record("qf1_value", tf.reduce_mean(qf1_value).numpy())
             qf2_value = self.qf2(inputs)[..., 0]
-            self.record("qf2_value", tf.reduce_mean(qf2_value))
+            self.record("qf2_value", tf.reduce_mean(qf2_value).numpy())
             qf1_loss = tf.reduce_mean(tf.keras.losses.logcosh(qf_targets, qf1_value))
-            self.record("qf1_loss", qf1_loss)
+            self.record("qf1_loss", qf1_loss.numpy())
             qf2_loss = tf.reduce_mean(tf.keras.losses.logcosh(qf_targets, qf2_value))
-            self.record("qf2_loss", qf2_loss)
+            self.record("qf2_loss", qf2_loss.numpy())
 
             # build the policy loss
             inputs = tf.concat([observations, mean_actions], -1)
             policy_qf1_value = self.qf1(inputs)[..., 0]
-            self.record("policy_qf1_value", tf.reduce_mean(policy_qf1_value))
+            self.record("policy_qf1_value", tf.reduce_mean(policy_qf1_value).numpy())
             policy_qf2_value = self.qf2(inputs)[..., 0]
-            self.record("policy_qf2_value", tf.reduce_mean(policy_qf2_value))
+            self.record("policy_qf2_value", tf.reduce_mean(policy_qf2_value).numpy())
             policy_loss = -tf.reduce_mean(
                 tf.minimum(policy_qf1_value, policy_qf2_value))
-            self.record("policy_loss", policy_loss)
+            self.record("policy_loss", policy_loss.numpy())
 
         # back prop gradients
         self.qf1.apply_gradients(
