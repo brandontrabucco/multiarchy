@@ -63,7 +63,6 @@ class Algorithm(ABC):
             # get a batch of data from the replay buffer
             batch_of_data = self.replay_buffer.sample(
                 self.batch_size, time_skip=time_skip, hierarchy_selector=hierarchy_selector)
-            print("d2")
 
             # samples are pulled from the replay buffer on the fly
             self.update_algorithm(*batch_of_data)

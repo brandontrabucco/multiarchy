@@ -21,7 +21,7 @@ def run_experiment(experiment_id):
         num_warm_up_steps=10000,
         num_steps_per_epoch=1000,
         num_steps_per_eval=10000,
-        num_epochs_per_eval=1,
+        num_epochs_per_eval=10,
         num_epochs=10000)
 
     # run an experiment using these parameters
