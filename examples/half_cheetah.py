@@ -34,4 +34,4 @@ if __name__ == "__main__":
     ray.init()
 
     # run several experiments with the same parameters
-    ray.get([run_experiment.remote(seed) for seed in range(5)])
+    ray.get([run_experiment.remote(seed) for seed in range(1)])

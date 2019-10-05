@@ -20,13 +20,12 @@ class Agent(ABC):
 
     def train(
             self,
-            iteration,
             hierarchy_selector=(lambda x: x)
     ):
         # train the algorithm using this replay buffer
         if self.algorithm is not None:
             self.algorithm.fit(
-                iteration, time_skip=self.time_skip, hierarchy_selector=hierarchy_selector)
+                time_skip=self.time_skip, hierarchy_selector=hierarchy_selector)
 
     @abstractmethod
     def get_weights(

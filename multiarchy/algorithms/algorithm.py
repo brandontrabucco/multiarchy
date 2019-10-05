@@ -31,6 +31,7 @@ class Algorithm(ABC):
 
         # necessary for update_every and update_after
         self.last_update_iteration = -1
+        self.iteration = 0
 
     def record(
             self,
@@ -50,15 +51,15 @@ class Algorithm(ABC):
 
     def fit(
             self,
-            iteration,
             time_skip=1,
             hierarchy_selector=(lambda x: x)
     ):
         # only train on certain steps
-        if (iteration >= self.update_after) and (
-                iteration -
+        self.iteration += 1
+        if (self.iteration >= self.update_after) and (
+                self.iteration -
                 self.last_update_iteration >= self.update_every):
-            self.last_update_iteration = iteration
+            self.last_update_iteration = self.iteration
 
             # get a batch of data from the replay buffer
             batch_of_data = self.replay_buffer.sample(

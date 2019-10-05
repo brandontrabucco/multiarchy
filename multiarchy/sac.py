@@ -10,7 +10,7 @@ from multiarchy.replay_buffers.step_replay_buffer import StepReplayBuffer
 from multiarchy.loggers.tensorboard_logger import TensorboardLogger
 from multiarchy.samplers.sampler import Sampler
 from multiarchy.algorithms.sac import SAC
-import ray
+import tensorflow as tf
 
 
 sac_variant = dict(
@@ -28,15 +28,15 @@ sac_variant = dict(
     num_epochs=10000)
 
 
-# TODO: the core dump is most likely due to an error in hierarchy_selector
-
-
 def sac(
         variant,
         env_class,
         env_kwargs=None,
         observation_key="observation",
 ):
+    for gpu in tf.config.experimental.list_physical_devices('GPU'):
+        tf.config.experimental.set_memory_growth(gpu, True)
+
     # run an experiment with multiple agents
     if env_kwargs is None:
         env_kwargs = {}
@@ -180,4 +180,4 @@ def sac(
 
         # train once each for the number of steps collected
         for i in range(num_steps):
-            agent.train(iteration)
+            agent.train()
