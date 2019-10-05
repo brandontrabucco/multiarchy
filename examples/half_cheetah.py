@@ -17,6 +17,8 @@ def run_experiment(experiment_id):
         discount=0.99,
         initial_alpha=0.1,
         lr=0.0003,
+        tau=0.005,
+        batch_size=256,
         max_path_length=1000,
         num_warm_up_steps=10000,
         num_steps_per_epoch=1000,

@@ -20,6 +20,8 @@ sac_variant = dict(
     discount=0.99,
     initial_alpha=0.1,
     lr=0.0003,
+    tau=0.005,
+    batch_size=256,
     max_path_length=1000,
     num_warm_up_steps=10000,
     num_steps_per_epoch=1000,
@@ -63,22 +65,27 @@ def sac(
     policy = TanhGaussian(
         dense(observation_dim, action_dim * 2),
         optimizer_kwargs=dict(lr=variant["lr"]),
+        tau=variant["tau"],
         std=None)
     qf1 = Gaussian(
         dense(observation_dim + action_dim, 1),
         optimizer_kwargs=dict(lr=variant["lr"]),
+        tau=variant["tau"],
         std=1.0)
     qf2 = Gaussian(
         dense(observation_dim + action_dim, 1),
         optimizer_kwargs=dict(lr=variant["lr"]),
+        tau=variant["tau"],
         std=1.0)
     target_qf1 = Gaussian(
         dense(observation_dim + action_dim, 1),
         optimizer_kwargs=dict(lr=variant["lr"]),
+        tau=variant["tau"],
         std=1.0)
     target_qf2 = Gaussian(
         dense(observation_dim + action_dim, 1),
         optimizer_kwargs=dict(lr=variant["lr"]),
+        tau=variant["tau"],
         std=1.0)
 
     def observation_selector(x):
@@ -98,6 +105,7 @@ def sac(
         alpha_optimizer_kwargs=dict(lr=variant["lr"]),
         target_entropy=(-action_dim),
         input_selector=observation_selector,
+        batch_size=variant["batch_size"],
         logger=logger,
         logging_prefix="sac/")
 
