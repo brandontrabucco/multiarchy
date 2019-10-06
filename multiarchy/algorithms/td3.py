@@ -5,7 +5,7 @@ from multiarchy.algorithms.algorithm import Algorithm
 import tensorflow as tf
 
 
-class SAC(Algorithm):
+class TD3(Algorithm):
 
     def __init__(
             self,
