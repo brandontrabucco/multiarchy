@@ -10,7 +10,6 @@ from multiarchy.replay_buffers.step_replay_buffer import StepReplayBuffer
 from multiarchy.loggers.tensorboard_logger import TensorboardLogger
 from multiarchy.samplers.sampler import Sampler
 from multiarchy.algorithms.sac import SAC
-import tensorflow as tf
 
 
 sac_variant = dict(
@@ -36,9 +35,6 @@ def sac(
         env_kwargs=None,
         observation_key="observation",
 ):
-    for gpu in tf.config.experimental.list_physical_devices('GPU'):
-        tf.config.experimental.set_memory_growth(gpu, True)
-
     # run an experiment with multiple agents
     if env_kwargs is None:
         env_kwargs = {}
@@ -119,7 +115,10 @@ def sac(
     def create_agent():
         return PolicyAgent(
             TanhGaussian(
-                dense(observation_dim, action_dim * 2), std=None),
+                dense(observation_dim, action_dim * 2),
+                optimizer_kwargs=dict(lr=variant["lr"]),
+                tau=variant["tau"],
+                std=None),
             input_selector=observation_selector)
 
     # make a sampler to collect data to warm up the hierarchy

@@ -1,18 +1,17 @@
 """Author: Brandon Trabucco, Copyright 2019, MIT License"""
 
 
-from multiarchy.sac import sac
+from multiarchy.launch import launch
+from multiarchy.baselines.sac import sac, sac_variant
 from gym.envs.mujoco.half_cheetah import HalfCheetahEnv
-import ray
 
 
-@ray.remote
-def run_experiment(experiment_id):
+if __name__ == "__main__":
 
-    # change the logging directory and set parameters
+    # parameters for the learning experiment
     variant = dict(
         max_num_steps=1000000,
-        logging_dir="half_cheetah/sac/{}/".format(experiment_id),
+        logging_dir="half_cheetah/sac/",
         reward_scale=1.0,
         discount=0.99,
         initial_alpha=0.1,
@@ -26,14 +25,14 @@ def run_experiment(experiment_id):
         num_epochs_per_eval=10,
         num_epochs=10000)
 
-    # run an experiment using these parameters
-    return sac(variant, HalfCheetahEnv)
+    # make sure that all the right parameters are here
+    assert all([x in variant.keys() for x in sac_variant.keys()])
 
-
-if __name__ == "__main__":
-
-    # turn on the ray cluster
-    ray.init()
-
-    # run several experiments with the same parameters
-    ray.get([run_experiment.remote(seed) for seed in range(1)])
+    # launch the experiment using ray
+    launch(
+        sac,
+        variant,
+        HalfCheetahEnv,
+        num_cpus=24,
+        num_gpus=1,
+        num_seeds=2)

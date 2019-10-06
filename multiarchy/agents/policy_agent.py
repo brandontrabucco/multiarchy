@@ -47,8 +47,8 @@ class PolicyAgent(Agent):
             # choose to use the stochastic or deterministic policy
             self.goal = flatten(goal)
             inputs = np.concatenate([self.input_selector(observation), *self.goal], -1)[None, ...]
-            self.action = (self.policy.expected_value(
+            self.stack = self.action = (self.policy.expected_value(
                 inputs) if deterministic else self.policy.sample(inputs))[0][0, ...].numpy()
 
         # return the latest action and goal that was sampled by the agent
-        return self.action, self.action, self.goal
+        return self.action, self.stack, self.goal

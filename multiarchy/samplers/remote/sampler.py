@@ -4,6 +4,9 @@
 import numpy as np
 import ray
 
+import os
+import psutil
+
 
 @ray.remote
 class RemoteSampler(object):
@@ -71,14 +74,16 @@ class RemoteSampler(object):
                     deterministic=deterministic)
 
                 # save the observation and the actions from the agent
-                observation_t["goal"] = goals_t
-                observations.append(observation_t)
-                actions.append(actions_t)
+                if save_data:
+                    observation_t["goal"] = goals_t
+                    observations.append(observation_t)
+                    actions.append(actions_t)
 
                 # update the environment with the atomic actions
                 observation_t, reward_t, done, info = self.env.step(atoms_t)
-                rewards.append(reward_t)
                 path_return += reward_t
+                if save_data:
+                    rewards.append(reward_t)
 
                 # and possibly render the updated environment (to a video)
                 if render:
