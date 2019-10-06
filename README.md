@@ -4,10 +4,10 @@ MultiArchy is a framework for training deep multi-agent hierarchical policies. H
 
 # Features
 
-We currently have implemented the following algorithms:
+We currently implement the following algorithms:
 
-* SAC, TD3, PPO
-* HIRO, HAC, HiPPO
+* Monolithic: SAC, TD3, PPO
+* Hierarchical: HIRO, HAC, HiPPO
 
 # Installation
 
@@ -22,9 +22,9 @@ pip install -e multiarchy
 
 We require a few packages for training:
 
+* Ray 0.7.5 is tested and working
 * Mujoco 2.0 should be installed on the machine running training
 * TensorFlow 2.0 should be installed on the machine running training
-* Ray 0.7.5 is tested and working
 
 # Research
 
