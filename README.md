@@ -1,4 +1,4 @@
-# multiarchy
+# MultiArchy
 
 MultiArchy is a framework for training deep multi-agent hierarchical policies. Have fun! -Brandon
 
