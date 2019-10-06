@@ -28,4 +28,4 @@ We require a few packages for training:
 
 # Research
 
-We are actively implementing more baselines, and using MultiArchy for internal research. Refer to `multiarchy/multiarchy/baselines` for reference on how to build your own hierarchy.
+We are actively implementing more reinforcement learning algorithms, and using MultiArchy for internal research. Refer to `multiarchy/multiarchy/baselines` for reference on how to build your own hierarchy and design new algorithms.
