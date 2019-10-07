@@ -3,7 +3,7 @@
 
 from multiarchy.launch import launch
 from multiarchy.baselines.sac import sac, sac_variant
-from gym.envs.mujoco.half_cheetah import HalfCheetahEnv
+from gym.envs.mujoco.humanoid import HumanoidEnv
 
 
 if __name__ == "__main__":
@@ -11,8 +11,8 @@ if __name__ == "__main__":
     # parameters for the learning experiment
     variant = dict(
         max_num_steps=1000000,
-        logging_dir="half_cheetah/sac/",
-        reward_scale=1.0,
+        logging_dir="humanoid/sac/",
+        reward_scale=0.01,
         discount=0.99,
         initial_alpha=0.01,
         lr=0.0003,
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     launch(
         sac,
         variant,
-        HalfCheetahEnv,
+        HumanoidEnv,
         num_cpus=12,
         num_gpus=1,
         num_seeds=1)

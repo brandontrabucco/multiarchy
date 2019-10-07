@@ -59,10 +59,10 @@ class RemotePathReplayBuffer(ReplayBuffer):
 
         # insert all samples into the buffer
         for time_step, (o, a, r) in enumerate(zip(observations, actions, rewards)):
+            self.terminals[self.head] = time_step
             nested_apply(self.insert_backend, self.observations, o)
             nested_apply(self.insert_backend, self.actions, a)
             self.insert_backend(self.rewards, r)
-            self.terminals[self.head] = time_step
             self.total_steps += 1
 
         # increment the head and size
@@ -92,7 +92,7 @@ class RemotePathReplayBuffer(ReplayBuffer):
         for j in range(time_skip):
             term_to_add = self.rewards[idx, j::time_skip, ...] * np.less_equal(
                 np.arange(self.max_path_length)[None, j::time_skip],
-                self.terminals[idx, None]).astype(np.float32)
+                self.terminals[idx, None]).astype(np.float32)[..., None]
             while term_to_add.shape[1] < rewards.shape[1]:
                 term_to_add = np.pad(term_to_add, [[0, 0], [0, 1]])
             rewards = rewards + term_to_add

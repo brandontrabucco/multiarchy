@@ -76,8 +76,8 @@ class RemoteStepReplayBuffer(ReplayBuffer):
         # sample transition for a hierarchy of policies
         idx = np.random.choice(
             self.size, size=batch_size, replace=(self.size < batch_size))
-        idx = idx - self.terminals[idx, ...].astype(np.int32) % time_skip
-        next_idx = (idx + time_skip + 1) % self.max_num_steps
+        idx = idx - self.terminals[idx, 0].astype(np.int32) % time_skip
+        next_idx = (idx + time_skip) % self.max_num_steps
         intermediate_ids = [(idx + i) % self.max_num_steps for i in range(time_skip)]
 
         def inner_sample(data):

@@ -19,13 +19,13 @@ def launch(
     ray.init(
         num_cpus=num_cpus,
         num_gpus=num_gpus,
-        redis_max_memory=1024 * 1024 * 100,
-        object_store_memory=1024 * 1024 * 100)
+        redis_max_memory=1024 * 1024 * 1024,
+        object_store_memory=1024 * 1024 * 1024)
 
     # wrap the baseline in order to share resources
     baseline_remote = ray.remote(
-        num_cpus=num_cpus / num_seeds,
-        num_gpus=num_gpus / num_seeds)(baseline)
+        num_cpus=num_cpus // num_seeds,
+        num_gpus=num_gpus / num_seeds - 1e-3)(baseline)
 
     # launch the experiments on the ray cluster
     results = []
