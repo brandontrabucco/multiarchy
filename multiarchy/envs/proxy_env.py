@@ -49,8 +49,6 @@ class ProxyEnv(Env):
             observation = {"observation": observation}
         observation = nested_apply(
             lambda x: np.array(x, dtype=np.float32), observation)
-        observation = nested_apply(
-            lambda x: np.array(x, dtype=np.float32), observation)
         reward = self.reward_shift + self.reward_scale * np.array(
             reward, dtype=np.float32)
         return observation, reward, done, info

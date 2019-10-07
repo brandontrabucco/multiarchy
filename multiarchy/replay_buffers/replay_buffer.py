@@ -21,6 +21,13 @@ class ReplayBuffer(ABC):
         self.total_steps = 0
         self.total_paths = 0
 
+    def empty(
+            self
+    ):
+        # empties the replay buffer of its elements
+        self.head = 0
+        self.size = 0
+
     def get_total_paths(
             self
     ):

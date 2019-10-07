@@ -8,7 +8,7 @@ def dense(
     input_size,
     output_size,
     hidden_size=400,
-    num_hidden_layers=1,
+    num_hidden_layers=2,
 ):
     # construct a dense neural network using the keras functional API
     visible = tf.keras.layers.Input(shape=(input_size,))

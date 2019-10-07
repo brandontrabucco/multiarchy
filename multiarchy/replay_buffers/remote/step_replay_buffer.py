@@ -52,14 +52,14 @@ class RemoteStepReplayBuffer(ReplayBuffer):
                 self.terminals is None]):
             self.observations = nested_apply(self.inflate_backend, observations[0])
             self.actions = nested_apply(self.inflate_backend, actions[0])
-            self.rewards = self.inflate_backend(rewards[0])
-            self.terminals = self.inflate_backend(rewards[0])
+            self.rewards = self.inflate_backend(np.squeeze(rewards[0]))
+            self.terminals = self.inflate_backend(np.squeeze(rewards[0]))
 
         # insert all samples into the buffer
         for time_step, (o, a, r) in enumerate(zip(observations, actions, rewards)):
             nested_apply(self.insert_backend, self.observations, o)
             nested_apply(self.insert_backend, self.actions, a)
-            self.insert_backend(self.rewards, r)
+            self.insert_backend(self.rewards, np.squeeze(r))
             self.insert_backend(self.terminals, time_step)
 
             # increment the head and size
@@ -76,7 +76,10 @@ class RemoteStepReplayBuffer(ReplayBuffer):
         # sample transition for a hierarchy of policies
         idx = np.random.choice(
             self.size, size=batch_size, replace=(self.size < batch_size))
-        idx = idx - self.terminals[idx, 0].astype(np.int32) % time_skip
+        idx = idx - self.terminals[idx].astype(np.int32) % time_skip
+
+        assert len(idx.shape) == 1
+
         next_idx = (idx + time_skip) % self.max_num_steps
         intermediate_ids = [(idx + i) % self.max_num_steps for i in range(time_skip)]
 

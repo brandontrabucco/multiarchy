@@ -17,6 +17,12 @@ class PathReplayBuffer(ReplayBuffer):
             max_path_length=max_path_length,
             max_num_paths=max_num_paths)
 
+    def empty(
+            self
+    ):
+        # empties the replay buffer of its elements
+        return ray.get(self.replay_buffer.empty.remote())
+
     def get_total_paths(
             self
     ):

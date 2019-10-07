@@ -3,6 +3,7 @@
 
 from copy import deepcopy
 import ray
+import tensorflow as tf
 
 
 def launch(
@@ -23,9 +24,25 @@ def launch(
         object_store_memory=1024 * 1024 * 1024)
 
     # wrap the baseline in order to share resources
-    baseline_remote = ray.remote(
+    @ray.remote(
         num_cpus=num_cpus // num_seeds,
-        num_gpus=num_gpus / num_seeds - 1e-3)(baseline)
+        num_gpus=num_gpus / num_seeds)
+    def baseline_remote(
+        seed_variant,
+        seed_env_class,
+        seed_env_kwargs=None,
+        seed_observation_key="observation",
+    ):
+        # prevent any process from consuming all gpu memory
+        for gpu in tf.config.experimental.list_physical_devices('GPU'):
+            tf.config.experimental.set_memory_growth(gpu, True)
+
+        # start training the baseline
+        return baseline(
+            seed_variant,
+            seed_env_class,
+            env_kwargs=seed_env_kwargs,
+            observation_key=seed_observation_key)
 
     # launch the experiments on the ray cluster
     results = []
@@ -36,8 +53,8 @@ def launch(
             baseline_remote.remote(
                 seed_variant,
                 env_class,
-                env_kwargs=env_kwargs,
-                observation_key=observation_key))
+                seed_env_kwargs=env_kwargs,
+                seed_observation_key=observation_key))
 
     # wait for every experiment to finish
     ray.get(results)

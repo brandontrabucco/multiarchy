@@ -15,6 +15,12 @@ class StepReplayBuffer(ReplayBuffer):
         self.replay_buffer = RemoteStepReplayBuffer.remote(
             max_num_steps=max_num_steps)
 
+    def empty(
+            self
+    ):
+        # empties the replay buffer of its elements
+        return ray.get(self.replay_buffer.empty.remote())
+
     def get_total_paths(
             self
     ):

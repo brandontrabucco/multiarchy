@@ -145,7 +145,6 @@ def feudal_net(
                     tau=variant["tau"],
                     std=variant["exploration_noise_std"]),
                 time_skip=variant["time_skip"] ** (variant["num_levels"] - 1 - inner_level),
-                algorithm=algorithm,
                 input_selector=observation_selector)
             for inner_level in range(variant["num_levels"])])
 
