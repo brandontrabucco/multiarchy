@@ -11,7 +11,9 @@ if __name__ == "__main__":
     # parameters for the learning experiment
     variant = dict(
         max_num_steps=1000000,
-        logging_dir="half_cheetah/sac/",
+        logging_dir="half_cheetah_new/sac/",
+        hidden_size=400,
+        num_hidden_layers=2,
         reward_scale=1.0,
         discount=0.99,
         initial_alpha=0.01,

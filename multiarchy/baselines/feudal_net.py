@@ -15,6 +15,8 @@ from multiarchy.algorithms.td3 import TD3
 feudal_net_variant = dict(
     max_num_steps=1000000,
     logging_dir="./",
+    hidden_size=400,
+    num_hidden_layers=2,
     num_levels=2,
     time_skip=5,
     exploration_noise_std=0.5,
@@ -71,32 +73,56 @@ def feudal_net(
 
         # create policies for each level in the hierarchy
         policy = Gaussian(
-            dense(input_dim, output_dim),
+            dense(
+                input_dim,
+                output_dim,
+                hidden_size=variant["hidden_size"],
+                num_hidden_layers=variant["num_hidden_layers"]),
             optimizer_kwargs=dict(lr=variant["lr"]),
             tau=variant["tau"],
             std=variant["exploration_noise_std"])
         target_policy = Gaussian(
-            dense(input_dim, output_dim),
+            dense(
+                input_dim,
+                output_dim,
+                hidden_size=variant["hidden_size"],
+                num_hidden_layers=variant["num_hidden_layers"]),
             optimizer_kwargs=dict(lr=variant["lr"]),
             tau=variant["tau"],
             std=variant["exploration_noise_std"])
         qf1 = Gaussian(
-            dense(input_dim + output_dim, 1),
+            dense(
+                input_dim + output_dim,
+                1,
+                hidden_size=variant["hidden_size"],
+                num_hidden_layers=variant["num_hidden_layers"]),
             optimizer_kwargs=dict(lr=variant["lr"]),
             tau=variant["tau"],
             std=1.0)
         qf2 = Gaussian(
-            dense(input_dim + output_dim, 1),
+            dense(
+                input_dim + output_dim,
+                1,
+                hidden_size=variant["hidden_size"],
+                num_hidden_layers=variant["num_hidden_layers"]),
             optimizer_kwargs=dict(lr=variant["lr"]),
             tau=variant["tau"],
             std=1.0)
         target_qf1 = Gaussian(
-            dense(input_dim + output_dim, 1),
+            dense(
+                input_dim + output_dim,
+                1,
+                hidden_size=variant["hidden_size"],
+                num_hidden_layers=variant["num_hidden_layers"]),
             optimizer_kwargs=dict(lr=variant["lr"]),
             tau=variant["tau"],
             std=1.0)
         target_qf2 = Gaussian(
-            dense(input_dim + output_dim, 1),
+            dense(
+                input_dim + output_dim,
+                1,
+                hidden_size=variant["hidden_size"],
+                num_hidden_layers=variant["num_hidden_layers"]),
             optimizer_kwargs=dict(lr=variant["lr"]),
             tau=variant["tau"],
             std=1.0)

@@ -12,6 +12,8 @@ if __name__ == "__main__":
     variant = dict(
         max_num_steps=10000,
         logging_dir="pointmass/sac/",
+        hidden_size=400,
+        num_hidden_layers=2,
         reward_scale=1.0,
         discount=0.99,
         initial_alpha=0.01,

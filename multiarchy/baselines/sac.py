@@ -15,6 +15,8 @@ from multiarchy.algorithms.sac import SAC
 sac_variant = dict(
     max_num_steps=1000000,
     logging_dir="./",
+    hidden_size=400,
+    num_hidden_layers=2,
     reward_scale=1.0,
     discount=0.99,
     initial_alpha=0.1,
@@ -59,27 +61,47 @@ def sac(
 
     # create policies for each level in the hierarchy
     policy = TanhGaussian(
-        dense(observation_dim, action_dim * 2),
+        dense(
+            observation_dim,
+            action_dim * 2,
+            hidden_size=variant["hidden_size"],
+            num_hidden_layers=variant["num_hidden_layers"]),
         optimizer_kwargs=dict(lr=variant["lr"]),
         tau=variant["tau"],
         std=None)
     qf1 = Gaussian(
-        dense(observation_dim + action_dim, 1),
+        dense(
+            observation_dim + action_dim,
+            1,
+            hidden_size=variant["hidden_size"],
+            num_hidden_layers=variant["num_hidden_layers"]),
         optimizer_kwargs=dict(lr=variant["lr"]),
         tau=variant["tau"],
         std=1.0)
     qf2 = Gaussian(
-        dense(observation_dim + action_dim, 1),
+        dense(
+            observation_dim + action_dim,
+            1,
+            hidden_size=variant["hidden_size"],
+            num_hidden_layers=variant["num_hidden_layers"]),
         optimizer_kwargs=dict(lr=variant["lr"]),
         tau=variant["tau"],
         std=1.0)
     target_qf1 = Gaussian(
-        dense(observation_dim + action_dim, 1),
+        dense(
+            observation_dim + action_dim,
+            1,
+            hidden_size=variant["hidden_size"],
+            num_hidden_layers=variant["num_hidden_layers"]),
         optimizer_kwargs=dict(lr=variant["lr"]),
         tau=variant["tau"],
         std=1.0)
     target_qf2 = Gaussian(
-        dense(observation_dim + action_dim, 1),
+        dense(
+            observation_dim + action_dim,
+            1,
+            hidden_size=variant["hidden_size"],
+            num_hidden_layers=variant["num_hidden_layers"]),
         optimizer_kwargs=dict(lr=variant["lr"]),
         tau=variant["tau"],
         std=1.0)
