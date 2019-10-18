@@ -23,13 +23,14 @@ class Agent(ABC):
             self
     ):
         # handle pickle actions so the agent can be sent between threads
-        return dict(time_skip=self.time_skip)
+        return dict(iteration=self.iteration, time_skip=self.time_skip)
 
     def __setstate__(
             self,
             state
     ):
         # handle pickle actions so the agent can be sent between threads
+        self.iteration = state["iteration"]
         self.time_skip = state["time_skip"]
 
     def train(
