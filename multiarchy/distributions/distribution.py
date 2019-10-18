@@ -61,8 +61,8 @@ class Distribution(ABC):
     ):
         # wrapper functions to transfer model state
         self.model.set_weights([
-            self.tau * w1 + (1.0 - self.tau) * w2
-            for w1, w2 in zip(weights, self.model.get_weights())])
+            self.tau * w1 + (1.0 - self.tau) * w2 for w1, w2 in zip(
+                weights, self.model.get_weights())])
 
     def compute_gradients(
             self,

@@ -3,6 +3,7 @@
 
 from multiarchy.algorithms.algorithm import Algorithm
 import tensorflow as tf
+import math
 
 
 class SAC(Algorithm):
@@ -46,7 +47,7 @@ class SAC(Algorithm):
         self.target_qf2 = target_qf2
 
         # attributes for computing entropy tuning
-        self.log_alpha = tf.Variable(tf.math.log(tf.fill([1], initial_alpha)))
+        self.log_alpha = tf.Variable(math.log(abs(initial_alpha)), dtype=tf.float32)
         if alpha_optimizer_kwargs is None:
             alpha_optimizer_kwargs = {}
         self.alpha_optimizer = alpha_optimizer(
@@ -76,7 +77,7 @@ class SAC(Algorithm):
         # build a tape to collect gradients from the policy and critics
         with tf.GradientTape(persistent=True) as tape:
             alpha = tf.exp(self.log_alpha)
-            self.record("alpha", tf.reduce_mean(alpha).numpy())
+            self.record("alpha", alpha.numpy())
 
             # sample actions from current policy
             sampled_actions, log_pi = self.policy.sample(observations)
@@ -102,9 +103,9 @@ class SAC(Algorithm):
             self.record("qf1_value", tf.reduce_mean(qf1_value).numpy())
             qf2_value = self.qf2(inputs)[..., 0]
             self.record("qf2_value", tf.reduce_mean(qf2_value).numpy())
-            qf1_loss = tf.reduce_mean(tf.keras.losses.logcosh(qf_targets, qf1_value))
+            qf1_loss = tf.reduce_mean(tf.keras.losses.mean_squared_error(qf_targets, qf1_value))
             self.record("qf1_loss", qf1_loss.numpy())
-            qf2_loss = tf.reduce_mean(tf.keras.losses.logcosh(qf_targets, qf2_value))
+            qf2_loss = tf.reduce_mean(tf.keras.losses.mean_squared_error(qf_targets, qf2_value))
             self.record("qf2_loss", qf2_loss.numpy())
 
             # build policy loss
