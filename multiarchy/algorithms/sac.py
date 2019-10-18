@@ -21,7 +21,7 @@ class SAC(Algorithm):
             alpha_optimizer=tf.keras.optimizers.Adam,
             alpha_optimizer_kwargs=None,
             target_entropy=0.0,
-            input_selector=(lambda x: x["observation"]),
+            observation_key="observation",
             batch_size=32,
             update_every=1,
             update_after=0,
@@ -53,7 +53,7 @@ class SAC(Algorithm):
             [self.log_alpha], **alpha_optimizer_kwargs)
 
         # select into the observation dictionary
-        self.input_selector = input_selector
+        self.observation_key = observation_key
 
         # control some parameters that are important for sac
         self.reward_scale = reward_scale
@@ -70,8 +70,8 @@ class SAC(Algorithm):
             terminals
     ):
         # select from the observation dictionary
-        observations = tf.constant(self.input_selector(observations))
-        next_observations = tf.constant(self.input_selector(next_observations))
+        observations = tf.constant(observations[self.observation_key])
+        next_observations = tf.constant(next_observations[self.observation_key])
 
         # build a tape to collect gradients from the policy and critics
         with tf.GradientTape(persistent=True) as tape:

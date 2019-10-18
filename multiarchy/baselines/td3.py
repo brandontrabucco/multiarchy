@@ -7,7 +7,7 @@ from multiarchy.networks import dense
 from multiarchy.agents.policy_agent import PolicyAgent
 from multiarchy.replay_buffers.step_replay_buffer import StepReplayBuffer
 from multiarchy.loggers.tensorboard_logger import TensorboardLogger
-from multiarchy.samplers.sampler import Sampler
+from multiarchy.samplers.parallel_sampler import Sampler
 from multiarchy.algorithms.td3 import TD3
 
 

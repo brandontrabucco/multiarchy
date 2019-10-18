@@ -18,8 +18,22 @@ class Agent(ABC):
         self.stack = None
         self.goal = None
 
+    def __getstate__(
+            self
+    ):
+        # handle pickle actions so the agent can be sent between threads
+        return dict(time_skip=self.time_skip)
+
+    def __setstate__(
+            self,
+            state
+    ):
+        # handle pickle actions so the agent can be sent between threads
+        self.time_skip = state["time_skip"]
+
     def train(
             self,
+            iteration,
             hierarchy_selector=(lambda x: x)
     ):
         # train the algorithm using this replay buffer

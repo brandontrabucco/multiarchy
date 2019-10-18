@@ -1,7 +1,9 @@
 """Author: Brandon Trabucco, Copyright 2019, MIT License"""
 
 
+from multiarchy import maybe_initialize_process
 from abc import ABC, abstractmethod
+import multiprocessing as m
 import tensorflow as tf
 
 
@@ -22,6 +24,29 @@ class Distribution(ABC):
         self.optimizer_class = optimizer_class
         self.optimizer_kwargs = optimizer_kwargs
         self.optimizer = optimizer_class(**optimizer_kwargs)
+
+    def __getstate__(
+            self
+    ):
+        # handle pickle actions so the agent can be sent between threads
+        return dict(
+            tau=self.tau,
+            optimizer_class=self.optimizer_class,
+            optimizer_kwargs=self.optimizer_kwargs,
+            model_json=self.model.to_json(),
+            model_weights=self.model.get_weights())
+
+    def __setstate__(
+            self,
+            state
+    ):
+        # initialize tensorflow and the multiprocessing interface
+        maybe_initialize_process()
+
+        # handle pickle actions so the agent can be sent between threads
+        self.model = tf.keras.models.model_from_json(state["model_json"])
+        self.model.set_weights(state["model_weights"])
+        self.tau = state["tau"]
 
     def __call__(
             self,
@@ -63,12 +88,6 @@ class Distribution(ABC):
         self.optimizer.minimize(loss_function)
 
     @abstractmethod
-    def clone(
-            self,
-    ):
-        return NotImplemented
-
-    @abstractmethod
     def get_parameters(
             self,
             *inputs
@@ -102,19 +121,6 @@ class Distribution(ABC):
     ):
         # compute the probability density of the inputs
         return tf.exp(self.log_prob(*inputs))
-
-    def __getstate__(
-            self
-    ):
-        # so that the wrapper can be serialized
-        return self.__dict__
-
-    def __setstate__(
-            self,
-            state
-    ):
-        # so that the wrapper can be serialized
-        self.__dict__.update(state)
 
     def __setattr__(
         self,

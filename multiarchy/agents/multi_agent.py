@@ -2,6 +2,7 @@
 
 
 from multiarchy.agents.agent import Agent
+import pickle as pkl
 
 
 class MultiAgent(Agent):
@@ -16,6 +17,21 @@ class MultiAgent(Agent):
 
         # a list of several parallel agents
         self.agents = agents
+
+    def __getstate__(
+            self
+    ):
+        # handle pickle actions so the agent can be sent between threads
+        state = Agent.__getstate__(self)
+        return dict(agents=[pkl.dump(agent) for agent in self.agents], **state)
+
+    def __setstate__(
+            self,
+            state
+    ):
+        # handle pickle actions so the agent can be sent between threads
+        Agent.__setstate__(self, state)
+        self.agents = [pkl.loads(x) for x in state["agents"]]
 
     def train(
             self,

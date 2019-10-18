@@ -1,9 +1,9 @@
 """Author: Brandon Trabucco, Copyright 2019, MIT License"""
 
 
+from multiarchy import nested_apply
 from multiarchy.replay_buffers.replay_buffer import ReplayBuffer
-from multiarchy.replay_buffers.remote.step_replay_buffer import RemoteStepReplayBuffer
-import ray
+import numpy as np
 
 
 class StepReplayBuffer(ReplayBuffer):
@@ -12,39 +12,26 @@ class StepReplayBuffer(ReplayBuffer):
             self,
             max_num_steps=1000000
     ):
-        self.replay_buffer = RemoteStepReplayBuffer.remote(
-            max_num_steps=max_num_steps)
+        ReplayBuffer.__init__(self)
 
-    def empty(
-            self
-    ):
-        # empties the replay buffer of its elements
-        return ray.get(self.replay_buffer.empty.remote())
+        # parameters to control how the buffer is created and managed
+        self.max_num_steps = max_num_steps
 
-    def get_total_paths(
-            self
-    ):
-        # return the total number of episodes collected
-        return ray.get(self.replay_buffer.get_total_paths.remote())
-
-    def get_total_steps(
-            self
-    ):
-        # return the total number of transitions collected
-        return ray.get(self.replay_buffer.get_total_steps.remote())
-
-    def to_dict(
+    def inflate_backend(
             self,
+            x
     ):
-        # save the replay buffer to a dictionary
-        return ray.get(self.replay_buffer.to_dict.remote())
+        # create numpy arrays to store samples
+        x = x if isinstance(x, np.ndarray) else np.array(x)
+        return np.zeros_like(x, shape=[self.max_num_steps, *x.shape])
 
-    def from_dict(
+    def insert_backend(
             self,
-            state
+            structure,
+            data
     ):
-        # load the replay buffer from a dictionary
-        ray.get(self.replay_buffer.from_dict.remote(state))
+        # insert samples into the numpy array
+        structure[self.head, ...] = data
 
     def insert_path(
             self,
@@ -53,10 +40,30 @@ class StepReplayBuffer(ReplayBuffer):
             rewards
     ):
         # insert a path into the replay buffer
-        ray.get(self.replay_buffer.insert_path.remote(
-            observations,
-            actions,
-            rewards))
+        self.total_paths += 1
+        observations = observations[:self.max_num_steps]
+        actions = actions[:self.max_num_steps]
+        rewards = rewards[:self.max_num_steps]
+
+        # inflate the replay buffer if not inflated
+        if any([self.observations is None, self.actions is None, self.rewards is None,
+                self.terminals is None]):
+            self.observations = nested_apply(self.inflate_backend, observations[0])
+            self.actions = nested_apply(self.inflate_backend, actions[0])
+            self.rewards = self.inflate_backend(np.squeeze(rewards[0]))
+            self.terminals = self.inflate_backend(np.squeeze(rewards[0]))
+
+        # insert all samples into the buffer
+        for time_step, (o, a, r) in enumerate(zip(observations, actions, rewards)):
+            nested_apply(self.insert_backend, self.observations, o)
+            nested_apply(self.insert_backend, self.actions, a)
+            self.insert_backend(self.rewards, np.squeeze(r))
+            self.insert_backend(self.terminals, time_step)
+
+            # increment the head and size
+            self.head = (self.head + 1) % self.max_num_steps
+            self.size = min(self.size + 1, self.max_num_steps)
+            self.total_steps += 1
 
     def sample(
             self,
@@ -64,6 +71,39 @@ class StepReplayBuffer(ReplayBuffer):
             time_skip=1,
             hierarchy_selector=(lambda x: x)
     ):
-        # determine which steps to sample from
-        return ray.get(self.replay_buffer.sample.remote(
-            batch_size, time_skip=time_skip, hierarchy_selector=hierarchy_selector))
+        # sample transition for a hierarchy of policies
+        idx = np.random.choice(
+            self.size, size=batch_size, replace=(self.size < batch_size))
+        idx = idx - self.terminals[idx].astype(np.int32) % time_skip
+
+        assert len(idx.shape) == 1
+
+        next_idx = (idx + time_skip) % self.max_num_steps
+        intermediate_ids = [(idx + i) % self.max_num_steps for i in range(time_skip)]
+
+        def inner_sample(data):
+            return data[idx, ...]
+
+        def inner_sample_last(data):
+            return data[next_idx, ...]
+
+        # sample current batch from a nested structure
+        observations = nested_apply(inner_sample, self.observations)
+        observations["goal"] = hierarchy_selector(observations["goal"])
+        actions = hierarchy_selector(nested_apply(inner_sample, self.actions))
+
+        # sum the rewards across the horizon where valid
+        rewards = 0.0
+        for j in intermediate_ids:
+            rewards = rewards + (self.rewards[j, ...] * np.greater_equal(
+                self.terminals[j, ...], self.terminals[idx, ...]).astype(np.float32))
+
+        # sample current batch from a nested structure
+        next_observations = nested_apply(inner_sample_last, self.observations)
+        next_observations["goal"] = hierarchy_selector(next_observations["goal"])
+        terminals = np.greater_equal(
+            inner_sample_last(self.terminals),
+            inner_sample(self.terminals)).astype(np.float32)
+
+        # return the samples in a batch
+        return observations, actions, rewards, next_observations, terminals

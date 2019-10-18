@@ -21,6 +21,7 @@ if __name__ == "__main__":
         tau=0.05,
         batch_size=256,
         max_path_length=10,
+        num_workers=2,
         num_warm_up_steps=100,
         num_steps_per_epoch=10,
         num_steps_per_eval=100,
@@ -35,6 +36,4 @@ if __name__ == "__main__":
         sac,
         variant,
         PointmassEnv,
-        num_cpus=6,
-        num_gpus=0,
         num_seeds=2)

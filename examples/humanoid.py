@@ -21,6 +21,7 @@ if __name__ == "__main__":
         tau=0.005,
         batch_size=256,
         max_path_length=1000,
+        num_workers=2,
         num_warm_up_steps=10000,
         num_steps_per_epoch=1000,
         num_steps_per_eval=10000,
@@ -35,6 +36,4 @@ if __name__ == "__main__":
         sac,
         variant,
         HumanoidEnv,
-        num_cpus=12,
-        num_gpus=1,
         num_seeds=1)

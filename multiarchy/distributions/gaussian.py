@@ -25,16 +25,20 @@ class Gaussian(Distribution):
             optimizer_kwargs=optimizer_kwargs)
         self.std = std
 
-    def clone(
+    def __getstate__(
             self
     ):
-        # create an exact duplicate (different pointers) of the policy
-        return Gaussian(
-            tf.keras.models.clone_model(self.model),
-            std=self.std,
-            tau=self.tau,
-            optimizer_class=self.optimizer_class,
-            optimizer_kwargs=self.optimizer_kwargs)
+        # handle pickle actions so the agent can be sent between threads
+        state = Distribution.__getstate__(self)
+        return dict(std=self.std, **state)
+
+    def __setstate__(
+            self,
+            state
+    ):
+        # handle pickle actions so the agent can be sent between threads
+        Distribution.__setstate__(self, state)
+        self.std = state["std"]
 
     def get_parameters(
             self,

@@ -24,17 +24,6 @@ class TanhGaussian(Gaussian):
             optimizer_class=optimizer_class,
             optimizer_kwargs=optimizer_kwargs)
 
-    def clone(
-        self
-    ):
-        # create an exact duplicate (different pointers) of the policy
-        return TanhGaussian(
-            tf.keras.models.clone_model(self.model),
-            std=self.std,
-            tau=self.tau,
-            optimizer_class=self.optimizer_class,
-            optimizer_kwargs=self.optimizer_kwargs)
-
     def sample(
         self,
         *inputs

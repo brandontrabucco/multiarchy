@@ -1,6 +1,7 @@
 """Author: Brandon Trabucco, Copyright 2019, MIT License"""
 
 
+from multiarchy import maybe_initialize_process
 from multiarchy.envs.normalized_env import NormalizedEnv
 from multiarchy.distributions.tanh_gaussian import TanhGaussian
 from multiarchy.distributions.gaussian import Gaussian
@@ -8,8 +9,9 @@ from multiarchy.networks import dense
 from multiarchy.agents.policy_agent import PolicyAgent
 from multiarchy.replay_buffers.step_replay_buffer import StepReplayBuffer
 from multiarchy.loggers.tensorboard_logger import TensorboardLogger
-from multiarchy.samplers.sampler import Sampler
+from multiarchy.samplers.parallel_sampler import ParallelSampler
 from multiarchy.algorithms.sac import SAC
+import numpy as np
 
 
 sac_variant = dict(
@@ -24,6 +26,7 @@ sac_variant = dict(
     tau=0.005,
     batch_size=256,
     max_path_length=1000,
+    num_workers=2,
     num_warm_up_steps=10000,
     num_steps_per_epoch=1000,
     num_steps_per_eval=10000,
@@ -37,16 +40,15 @@ def sac(
         env_kwargs=None,
         observation_key="observation",
 ):
+    # initialize tensorflow and the multiprocessing interface
+    maybe_initialize_process()
+
     # run an experiment with multiple agents
     if env_kwargs is None:
         env_kwargs = {}
 
-    # a function that creates the training environment
-    def create_env():
-        return NormalizedEnv(env_class, **env_kwargs)
-
     # initialize the environment to track the cardinality of actions
-    env = create_env()
+    env = NormalizedEnv(env_class, **env_kwargs)
     action_dim = env.action_space.low.size
     observation_dim = env.observation_space.spaces[
         observation_key].low.size
@@ -69,6 +71,7 @@ def sac(
         optimizer_kwargs=dict(lr=variant["lr"]),
         tau=variant["tau"],
         std=None)
+
     qf1 = Gaussian(
         dense(
             observation_dim + action_dim,
@@ -78,6 +81,7 @@ def sac(
         optimizer_kwargs=dict(lr=variant["lr"]),
         tau=variant["tau"],
         std=1.0)
+
     qf2 = Gaussian(
         dense(
             observation_dim + action_dim,
@@ -87,6 +91,7 @@ def sac(
         optimizer_kwargs=dict(lr=variant["lr"]),
         tau=variant["tau"],
         std=1.0)
+
     target_qf1 = Gaussian(
         dense(
             observation_dim + action_dim,
@@ -96,6 +101,7 @@ def sac(
         optimizer_kwargs=dict(lr=variant["lr"]),
         tau=variant["tau"],
         std=1.0)
+
     target_qf2 = Gaussian(
         dense(
             observation_dim + action_dim,
@@ -105,9 +111,6 @@ def sac(
         optimizer_kwargs=dict(lr=variant["lr"]),
         tau=variant["tau"],
         std=1.0)
-
-    def observation_selector(x):
-        return x[observation_key]
 
     # train the agent using soft actor critic
     algorithm = SAC(
@@ -122,7 +125,7 @@ def sac(
         initial_alpha=variant["initial_alpha"],
         alpha_optimizer_kwargs=dict(lr=variant["lr"]),
         target_entropy=(-action_dim),
-        input_selector=observation_selector,
+        observation_key=observation_key,
         batch_size=variant["batch_size"],
         logger=logger,
         logging_prefix="sac/")
@@ -131,54 +134,22 @@ def sac(
     agent = PolicyAgent(
         policy,
         algorithm=algorithm,
-        input_selector=observation_selector)
-
-    # create an agent to interact with an environment
-    def create_agent():
-        return PolicyAgent(
-            TanhGaussian(
-                dense(observation_dim, action_dim * 2),
-                optimizer_kwargs=dict(lr=variant["lr"]),
-                tau=variant["tau"],
-                std=None),
-            input_selector=observation_selector)
+        observation_key=observation_key)
 
     # make a sampler to collect data to warm up the hierarchy
-    warm_up_sampler = Sampler(
-        create_env,
-        create_agent,
+    sampler = ParallelSampler(
+        env,
+        agent,
         max_path_length=variant["max_path_length"],
-        num_processes=(variant["num_warm_up_steps"] //
-                       variant["max_path_length"]),
-        logger=logger,
-        logging_prefix="warm_up_sampler/")
-
-    # make a sampler to collect data to train the hierarchy
-    train_sampler = Sampler(
-        create_env,
-        create_agent,
-        max_path_length=variant["max_path_length"],
-        num_processes=(variant["num_steps_per_epoch"] //
-                       variant["max_path_length"]),
-        logger=logger,
-        logging_prefix="train_sampler/")
-
-    # make a sampler to collect data to evaluate the hierarchy
-    eval_sampler = Sampler(
-        create_env,
-        create_agent,
-        max_path_length=variant["max_path_length"],
-        num_processes=(variant["num_steps_per_eval"] //
-                       variant["max_path_length"]),
-        logger=logger,
-        logging_prefix="eval_sampler/")
+        num_workers=variant["num_workers"])
 
     # collect more training samples
-    warm_up_sampler.set_weights(agent.get_weights())
-    paths, num_steps = warm_up_sampler.collect(
+    sampler.set_weights(agent.get_weights())
+    paths, returns, num_steps = sampler.collect(
         variant["num_warm_up_steps"],
         deterministic=False,
-        save_data=True)
+        save_data=True,
+        workers_to_use=variant["num_workers"])
 
     # insert the samples into the replay buffer
     for o, a, r in paths:
@@ -190,18 +161,22 @@ def sac(
         if iteration % variant["num_epochs_per_eval"] == 0:
 
             # evaluate the policy at this step
-            eval_sampler.set_weights(agent.get_weights())
-            eval_sampler.collect(
+            sampler.set_weights(agent.get_weights())
+            paths, eval_returns, num_steps = sampler.collect(
                 variant["num_steps_per_eval"],
                 deterministic=True,
-                save_data=False)
+                save_data=False,
+                workers_to_use=variant["num_workers"])
+            logger.record("eval_mean_return", np.mean(eval_returns))
 
         # collect more training samples
-        train_sampler.set_weights(agent.get_weights())
-        paths, num_steps = train_sampler.collect(
+        sampler.set_weights(agent.get_weights())
+        paths, train_returns, num_steps = sampler.collect(
             variant["num_steps_per_epoch"],
             deterministic=False,
-            save_data=True)
+            save_data=True,
+            workers_to_use=1)
+        logger.record("train_mean_return", np.mean(train_returns))
 
         # insert the samples into the replay buffer
         for o, a, r in paths:

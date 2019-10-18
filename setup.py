@@ -10,8 +10,7 @@ REQUIRED_PACKAGES = [
     'numpy',
     'mujoco-py',
     'gym[all]',
-    'matplotlib',
-    'ray']
+    'matplotlib']
 
 
 setup(

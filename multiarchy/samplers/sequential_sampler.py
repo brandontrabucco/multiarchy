@@ -1,30 +1,18 @@
 """Author: Brandon Trabucco, Copyright 2019, MIT License"""
 
 
-import numpy as np
-import ray
-
-import os
-import psutil
-
-
-@ray.remote
-class RemoteSampler(object):
+class SequentialSampler(object):
 
     def __init__(
             self,
-            create_env,
-            create_agent,
-            max_path_length=1000,
-            logger=None,
-            logging_prefix="sampler/"
+            env,
+            agent,
+            max_path_length=1000
     ):
         # parameters to control sampling from the environment.
-        self.env = create_env()
-        self.agent = create_agent()
+        self.env = env
+        self.agent = agent
         self.max_path_length = max_path_length
-        self.logger = logger
-        self.logging_prefix = logging_prefix
 
     def set_weights(
             self,
@@ -46,8 +34,8 @@ class RemoteSampler(object):
             render_kwargs = {}
 
         # store data to pass to the replay buffer
-        all_returns = []
         paths = []
+        returns = []
 
         # start collecting many trajectories
         num_steps_collected = 0
@@ -94,16 +82,9 @@ class RemoteSampler(object):
                     break
 
             # save the episode into a list to send to the replay buffer
-            all_returns.append(path_return)
+            returns.append(path_return)
             if save_data:
                 paths.append((observations, actions, rewards))
 
-        # log the average return achieved by the agent for these steps
-        if self.logger is not None:
-            self.logger.record(
-                self.logging_prefix + "return_mean", np.mean(all_returns))
-            self.logger.record(
-                self.logging_prefix + "return_std", np.std(all_returns))
-
         # return the paths and the number of steps collected so far
-        return paths, num_steps_collected
+        return paths, returns, num_steps_collected

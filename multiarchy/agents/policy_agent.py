@@ -11,7 +11,7 @@ class PolicyAgent(Agent):
     def __init__(
             self,
             policy,
-            input_selector=(lambda x: x["observation"]),
+            observation_key="observation",
             time_skip=1,
             algorithm=None
     ):
@@ -19,7 +19,25 @@ class PolicyAgent(Agent):
 
         # story the policy and a selector into the observation dictionary
         self.policy = policy
-        self.input_selector = input_selector
+        self.observation_key = observation_key
+
+    def __getstate__(
+            self
+    ):
+        # handle pickle actions so the agent can be sent between threads
+        state = Agent.__getstate__(self)
+        return dict(
+            observation_key=self.observation_key,
+            policy=self.policy, **state)
+
+    def __setstate__(
+            self,
+            state
+    ):
+        # handle pickle actions so the agent can be sent between threads
+        Agent.__setstate__(self, state)
+        self.observation_key = state["observation_key"]
+        self.policy = state["policy"]
 
     def get_weights(
             self,
@@ -46,7 +64,7 @@ class PolicyAgent(Agent):
 
             # choose to use the stochastic or deterministic policy
             self.goal = flatten(goal)
-            inputs = np.concatenate([self.input_selector(observation), *self.goal], -1)[None, ...]
+            inputs = np.concatenate([observation[self.observation_key], *self.goal], -1)[None, ...]
             self.stack = self.action = (self.policy.expected_value(
                 inputs) if deterministic else self.policy.sample(inputs))[0][0, ...].numpy()
 

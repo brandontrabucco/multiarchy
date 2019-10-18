@@ -23,16 +23,20 @@ class Categorical(Distribution):
             optimizer_kwargs=optimizer_kwargs)
         self.temp = temp
 
-    def clone(
+    def __getstate__(
             self
     ):
-        # create an exact duplicate (different pointers) of the policy
-        return Categorical(
-            tf.keras.models.clone_model(self.model),
-            temp=self.temp,
-            tau=self.tau,
-            optimizer_class=self.optimizer_class,
-            optimizer_kwargs=self.optimizer_kwargs)
+        # handle pickle actions so the agent can be sent between threads
+        state = Distribution.__getstate__(self)
+        return dict(temp=self.temp, **state)
+
+    def __setstate__(
+            self,
+            state
+    ):
+        # handle pickle actions so the agent can be sent between threads
+        Distribution.__setstate__(self, state)
+        self.temp = state["temp"]
 
     def get_parameters(
             self,
