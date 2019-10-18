@@ -36,4 +36,4 @@ if __name__ == "__main__":
         sac,
         variant,
         HalfCheetahEnv,
-        num_seeds=1)
+        num_seeds=3)

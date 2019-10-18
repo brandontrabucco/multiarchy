@@ -64,7 +64,7 @@ def process_function(
                 sequential_sampler.collect(
                     min_num_steps_to_collect,
                     deterministic=deterministic,
-                    save_data=save_data,
+                    keep_data=save_data,
                     render=render,
                     render_kwargs=render_kwargs))
 
@@ -111,7 +111,7 @@ class ParallelSampler(object):
             self,
             min_num_steps_to_collect,
             deterministic=False,
-            save_data=False,
+            keep_data=False,
             render=False,
             render_kwargs=None,
             workers_to_use=1
@@ -123,7 +123,7 @@ class ParallelSampler(object):
             if (min_num_steps_to_collect % workers_to_use) - i > 0:
                 target_count += 1
             self.collect_input_queues[i].put((
-                target_count, deterministic, save_data, render, render_kwargs))
+                target_count, deterministic, keep_data, render, render_kwargs))
 
         # return paths from the workers into the main process
         results = []

@@ -9,7 +9,7 @@ import tensorflow as tf
 PROCESS_IS_INITIALIZED = False
 
 
-def maybe_initialize_process():
+def maybe_initialize_process(use_gpu=True):
     global PROCESS_IS_INITIALIZED
     if not PROCESS_IS_INITIALIZED:
         PROCESS_IS_INITIALIZED = True
@@ -18,9 +18,18 @@ def maybe_initialize_process():
         # see https://github.com/tensorflow/tensorflow/issues/5448
         m.set_start_method('spawn', force=True)
 
-        # prevent any process from consuming all gpu memory
-        for gpu in tf.config.experimental.list_physical_devices('GPU'):
-            tf.config.experimental.set_memory_growth(gpu, True)
+        if use_gpu:
+
+            # prevent any process from consuming all gpu memory
+            for gpu in tf.config.experimental.list_physical_devices('GPU'):
+                tf.config.experimental.set_memory_growth(gpu, True)
+
+        else:
+
+            # prevent any process from consuming any gpu memory
+            tf.config.experimental.set_visible_devices([], 'GPU')
+
+
 
 
 def nested_apply(

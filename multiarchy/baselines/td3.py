@@ -188,7 +188,7 @@ def td3(
     paths, num_steps = warm_up_sampler.collect(
         variant["num_warm_up_steps"],
         deterministic=False,
-        save_data=True)
+        keep_data=True)
 
     # insert the samples into the replay buffer
     for o, a, r in paths:
@@ -204,14 +204,14 @@ def td3(
             eval_sampler.collect(
                 variant["num_steps_per_eval"],
                 deterministic=True,
-                save_data=False)
+                keep_data=False)
 
         # collect more training samples
         train_sampler.set_weights(agent.get_weights())
         paths, num_steps = train_sampler.collect(
             variant["num_steps_per_epoch"],
             deterministic=False,
-            save_data=True)
+            keep_data=True)
 
         # insert the samples into the replay buffer
         for o, a, r in paths:

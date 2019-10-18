@@ -13,6 +13,7 @@ class Agent(ABC):
     ):
         # a single agent in a graph of many agents
         self.time_skip = time_skip
+        self.iteration = 0
         self.algorithm = algorithm
         self.action = None
         self.stack = None
@@ -33,13 +34,16 @@ class Agent(ABC):
 
     def train(
             self,
-            iteration,
+            iteration=None,
             hierarchy_selector=(lambda x: x)
     ):
         # train the algorithm using this replay buffer
+        self.iteration = self.iteration + 1 if iteration is None else iteration
         if self.algorithm is not None:
             self.algorithm.fit(
-                time_skip=self.time_skip, hierarchy_selector=hierarchy_selector)
+                self.iteration,
+                time_skip=self.time_skip,
+                hierarchy_selector=hierarchy_selector)
 
     @abstractmethod
     def get_weights(

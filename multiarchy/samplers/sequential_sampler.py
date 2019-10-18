@@ -25,7 +25,7 @@ class SequentialSampler(object):
             self,
             min_num_steps_to_collect,
             deterministic=False,
-            save_data=True,
+            keep_data=True,
             render=False,
             render_kwargs=None
     ):
@@ -62,7 +62,7 @@ class SequentialSampler(object):
                     deterministic=deterministic)
 
                 # save the observation and the actions from the agent
-                if save_data:
+                if keep_data:
                     observation_t["goal"] = goals_t
                     observations.append(observation_t)
                     actions.append(actions_t)
@@ -70,7 +70,7 @@ class SequentialSampler(object):
                 # update the environment with the atomic actions
                 observation_t, reward_t, done, info = self.env.step(atoms_t)
                 path_return += reward_t
-                if save_data:
+                if keep_data:
                     rewards.append(reward_t)
 
                 # and possibly render the updated environment (to a video)
@@ -83,7 +83,7 @@ class SequentialSampler(object):
 
             # save the episode into a list to send to the replay buffer
             returns.append(path_return)
-            if save_data:
+            if keep_data:
                 paths.append((observations, actions, rewards))
 
         # return the paths and the number of steps collected so far

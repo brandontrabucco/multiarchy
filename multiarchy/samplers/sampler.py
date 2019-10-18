@@ -19,7 +19,7 @@ class Sampler(ABC):
             self,
             min_num_steps_to_collect,
             deterministic=False,
-            save_data=False,
+            keep_data=False,
             render=False,
             render_kwargs=None
     ):

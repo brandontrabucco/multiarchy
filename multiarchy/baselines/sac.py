@@ -148,7 +148,7 @@ def sac(
     paths, returns, num_steps = sampler.collect(
         variant["num_warm_up_steps"],
         deterministic=False,
-        save_data=True,
+        keep_data=True,
         workers_to_use=variant["num_workers"])
 
     # insert the samples into the replay buffer
@@ -165,7 +165,7 @@ def sac(
             paths, eval_returns, num_steps = sampler.collect(
                 variant["num_steps_per_eval"],
                 deterministic=True,
-                save_data=False,
+                keep_data=False,
                 workers_to_use=variant["num_workers"])
             logger.record("eval_mean_return", np.mean(eval_returns))
 
@@ -174,7 +174,7 @@ def sac(
         paths, train_returns, num_steps = sampler.collect(
             variant["num_steps_per_epoch"],
             deterministic=False,
-            save_data=True,
+            keep_data=True,
             workers_to_use=1)
         logger.record("train_mean_return", np.mean(train_returns))
 
