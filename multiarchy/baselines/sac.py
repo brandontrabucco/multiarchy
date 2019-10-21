@@ -22,7 +22,8 @@ sac_variant = dict(
     reward_scale=1.0,
     discount=0.99,
     initial_alpha=0.1,
-    lr=0.0003,
+    policy_learning_rate=0.0003,
+    qf_learning_rate=0.0003,
     tau=0.005,
     batch_size=256,
     max_path_length=1000,
@@ -68,7 +69,7 @@ def sac(
             action_dim * 2,
             hidden_size=variant["hidden_size"],
             num_hidden_layers=variant["num_hidden_layers"]),
-        optimizer_kwargs=dict(lr=variant["lr"]),
+        optimizer_kwargs=dict(learning_rate=variant["policy_learning_rate"]),
         tau=variant["tau"],
         std=None)
 
@@ -77,10 +78,11 @@ def sac(
             observation_dim + action_dim,
             1,
             hidden_size=variant["hidden_size"],
-            num_hidden_layers=variant["num_hidden_layers"]),
-        optimizer_kwargs=dict(lr=variant["lr"]),
+            num_hidden_layers=variant["qf_learning_rate"]),
+        optimizer_kwargs=dict(learning_rate=variant["qf_learning_rate"]),
         tau=variant["tau"],
         std=1.0)
+    target_qf1 = qf1.clone()
 
     qf2 = Gaussian(
         dense(
@@ -88,29 +90,10 @@ def sac(
             1,
             hidden_size=variant["hidden_size"],
             num_hidden_layers=variant["num_hidden_layers"]),
-        optimizer_kwargs=dict(lr=variant["lr"]),
+        optimizer_kwargs=dict(learning_rate=variant["qf_learning_rate"]),
         tau=variant["tau"],
         std=1.0)
-
-    target_qf1 = Gaussian(
-        dense(
-            observation_dim + action_dim,
-            1,
-            hidden_size=variant["hidden_size"],
-            num_hidden_layers=variant["num_hidden_layers"]),
-        optimizer_kwargs=dict(lr=variant["lr"]),
-        tau=variant["tau"],
-        std=1.0)
-
-    target_qf2 = Gaussian(
-        dense(
-            observation_dim + action_dim,
-            1,
-            hidden_size=variant["hidden_size"],
-            num_hidden_layers=variant["num_hidden_layers"]),
-        optimizer_kwargs=dict(lr=variant["lr"]),
-        tau=variant["tau"],
-        std=1.0)
+    target_qf2 = qf2.clone()
 
     # train the agent using soft actor critic
     algorithm = SAC(
@@ -123,7 +106,7 @@ def sac(
         reward_scale=variant["reward_scale"],
         discount=variant["discount"],
         initial_alpha=variant["initial_alpha"],
-        alpha_optimizer_kwargs=dict(lr=variant["lr"]),
+        alpha_optimizer_kwargs=dict(learning_rate=variant["policy_learning_rate"]),
         target_entropy=(-action_dim),
         observation_key=observation_key,
         batch_size=variant["batch_size"],

@@ -1,6 +1,7 @@
 """Author: Brandon Trabucco, Copyright 2019, MIT License"""
 
 
+from multiarchy import maybe_initialize_process
 from multiarchy.envs.normalized_env import NormalizedEnv
 from multiarchy.distributions.gaussian import Gaussian
 from multiarchy.networks import dense
@@ -8,25 +9,24 @@ from multiarchy.agents.policy_agent import PolicyAgent
 from multiarchy.replay_buffers.step_replay_buffer import StepReplayBuffer
 from multiarchy.loggers.tensorboard_logger import TensorboardLogger
 from multiarchy.samplers.parallel_sampler import ParallelSampler
-from multiarchy.algorithms.td3 import TD3
+from multiarchy.algorithms.ddpg import DDPG
 import numpy as np
 
 
-td3_variant = dict(
+ddpg_variant = dict(
     max_num_steps=1000000,
     logging_dir="./",
     hidden_size=400,
     num_hidden_layers=2,
-    exploration_noise_std=0.1,
     reward_scale=1.0,
     discount=0.99,
-    target_clipping=0.5,
-    target_noise=0.2,
     policy_learning_rate=0.0003,
     qf_learning_rate=0.0003,
     tau=0.005,
+    exploration_noise_std=0.1,
     batch_size=256,
     max_path_length=1000,
+    num_workers=2,
     num_warm_up_steps=10000,
     num_steps_per_epoch=1000,
     num_steps_per_eval=10000,
@@ -34,12 +34,15 @@ td3_variant = dict(
     num_epochs=10000)
 
 
-def td3(
+def ddpg(
         variant,
         env_class,
         env_kwargs=None,
         observation_key="observation",
 ):
+    # initialize tensorflow and the multiprocessing interface
+    maybe_initialize_process()
+
     # run an experiment with multiple agents
     if env_kwargs is None:
         env_kwargs = {}
@@ -63,15 +66,15 @@ def td3(
         dense(
             observation_dim,
             action_dim,
-            output_activation="tanh",
             hidden_size=variant["hidden_size"],
-            num_hidden_layers=variant["num_hidden_layers"]),
+            num_hidden_layers=variant["num_hidden_layers"],
+            output_activation="tanh"),
         optimizer_kwargs=dict(learning_rate=variant["policy_learning_rate"]),
         tau=variant["tau"],
         std=variant["exploration_noise_std"])
     target_policy = policy.clone()
 
-    qf1 = Gaussian(
+    qf = Gaussian(
         dense(
             observation_dim + action_dim,
             1,
@@ -80,36 +83,21 @@ def td3(
         optimizer_kwargs=dict(learning_rate=variant["qf_learning_rate"]),
         tau=variant["tau"],
         std=1.0)
-    target_qf1 = qf1.clone()
-
-    qf2 = Gaussian(
-        dense(
-            observation_dim + action_dim,
-            1,
-            hidden_size=variant["hidden_size"],
-            num_hidden_layers=variant["num_hidden_layers"]),
-        optimizer_kwargs=dict(learning_rate=variant["qf_learning_rate"]),
-        tau=variant["tau"],
-        std=1.0)
-    target_qf2 = qf2.clone()
+    target_qf = qf.clone()
 
     # train the agent using soft actor critic
-    algorithm = TD3(
+    algorithm = DDPG(
         policy,
         target_policy,
-        qf1,
-        qf2,
-        target_qf1,
-        target_qf2,
+        qf,
+        target_qf,
         replay_buffer,
         reward_scale=variant["reward_scale"],
         discount=variant["discount"],
-        target_clipping=variant["target_clipping"],
-        target_noise=variant["target_noise"],
         observation_key=observation_key,
         batch_size=variant["batch_size"],
         logger=logger,
-        logging_prefix="td3/")
+        logging_prefix="ddpg/")
 
     # create a single agent to manage the hierarchy
     agent = PolicyAgent(
@@ -140,6 +128,7 @@ def td3(
     for iteration in range(variant["num_epochs"]):
 
         if iteration % variant["num_epochs_per_eval"] == 0:
+
             # evaluate the policy at this step
             sampler.set_weights(agent.get_weights())
             paths, eval_returns, num_steps = sampler.collect(

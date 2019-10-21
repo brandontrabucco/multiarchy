@@ -3,7 +3,7 @@
 
 from multiarchy import maybe_initialize_process
 from abc import ABC, abstractmethod
-import multiprocessing as m
+import pickle as pkl
 import tensorflow as tf
 
 
@@ -24,6 +24,12 @@ class Distribution(ABC):
         self.optimizer_class = optimizer_class
         self.optimizer_kwargs = optimizer_kwargs
         self.optimizer = optimizer_class(**optimizer_kwargs)
+
+    def clone(
+            self
+    ):
+        # return a copy of the model with the same weights
+        return pkl.loads(pkl.dumps(self))
 
     def __getstate__(
             self
@@ -79,13 +85,6 @@ class Distribution(ABC):
         # apply the gradient update rule to this model
         self.optimizer.apply_gradients(zip(
             gradients, self.model.trainable_variables))
-
-    def minimize(
-            self,
-            loss_function
-    ):
-        # apply the gradient update rule to this model
-        self.optimizer.minimize(loss_function)
 
     @abstractmethod
     def get_parameters(

@@ -20,12 +20,12 @@ class TD3(Algorithm):
             discount=0.99,
             target_clipping=0.5,
             target_noise=0.2,
-            input_selector=(lambda x: x["observation"]),
+            observation_key="observation",
             batch_size=32,
             update_every=1,
             update_after=0,
             logger=None,
-            logging_prefix="sac/"
+            logging_prefix="td3/"
     ):
         # train a policy using the vanilla policy gradient
         Algorithm.__init__(
@@ -46,7 +46,7 @@ class TD3(Algorithm):
         self.target_qf2 = target_qf2
 
         # select into the observation dictionary
-        self.input_selector = input_selector
+        self.observation_key = observation_key
 
         # control some parameters that are important for sac
         self.reward_scale = reward_scale
@@ -63,8 +63,8 @@ class TD3(Algorithm):
             terminals
     ):
         # select from the observation dictionary
-        observations = self.input_selector(observations)
-        next_observations = self.input_selector(next_observations)
+        observations = observations[self.observation_key]
+        next_observations = next_observations[self.observation_key]
 
         # build a tape to collect gradients from the policy and critics
         with tf.GradientTape(persistent=True) as tape:

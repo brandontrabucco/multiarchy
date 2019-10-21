@@ -17,6 +17,14 @@ def launch(
     # initialize tensorflow and the multiprocessing interface
     maybe_initialize_process()
 
+    # if only one seed is requested, then run in the main thread
+    if num_seeds == 1:
+        return baseline(
+            variant,
+            env_class,
+            env_kwargs=env_kwargs,
+            observation_key=observation_key)
+
     # launch the experiments on the ray cluster
     processes = []
     for seed in range(num_seeds):

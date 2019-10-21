@@ -9,6 +9,7 @@ def dense(
     output_size,
     hidden_size=400,
     num_hidden_layers=2,
+    output_activation=None
 ):
     # construct a dense neural network using the keras functional API
     visible = tf.keras.layers.Input(shape=(input_size,))
@@ -18,7 +19,7 @@ def dense(
     for i in range(num_hidden_layers):
         hidden = tf.keras.layers.Dense(
             hidden_size,
-            activation=tf.nn.relu,
+            activation="relu",
             kernel_initializer=tf.keras.initializers.VarianceScaling(
                 scale=(1.0 / 3.0),
                 mode='fan_in',
@@ -27,6 +28,7 @@ def dense(
     # build an output layer
     outputs = tf.keras.layers.Dense(
         output_size,
+        activation=output_activation,
         kernel_initializer=tf.keras.initializers.RandomUniform(
             minval=-0.003, maxval=0.003))(hidden)
 
