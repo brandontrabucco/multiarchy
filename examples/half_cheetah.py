@@ -1,7 +1,7 @@
 """Author: Brandon Trabucco, Copyright 2019, MIT License"""
 
 
-from multiarchy.launch import launch
+from multiarchy.launch import launch_local
 from multiarchy.baselines.sac import sac, sac_variant
 from gym.envs.mujoco.half_cheetah import HalfCheetahEnv
 
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     assert all([x in variant.keys() for x in sac_variant.keys()])
 
     # launch the experiment using ray
-    launch(
+    launch_local(
         sac,
         variant,
         HalfCheetahEnv,

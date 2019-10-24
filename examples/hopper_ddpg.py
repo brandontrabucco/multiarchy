@@ -1,7 +1,7 @@
 """Author: Brandon Trabucco, Copyright 2019, MIT License"""
 
 
-from multiarchy.launch import launch
+from multiarchy.launch import launch_local
 from multiarchy.baselines.ddpg import ddpg, ddpg_variant
 from gym.envs.mujoco.hopper import HopperEnv
 
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     assert all([x in variant.keys() for x in ddpg_variant.keys()])
 
     # launch the experiment using ray
-    launch(
+    launch_local(
         ddpg,
         variant,
         HopperEnv,

@@ -37,7 +37,7 @@ def process_function(
         collect_output_queue
 ):
     # initialize tensorflow and the multiprocessing interface
-    maybe_initialize_process()
+    maybe_initialize_process(use_gpu=False)
 
     # create a sampler instance within this thread
     sequential_sampler = SequentialSampler(

@@ -6,7 +6,7 @@ from copy import deepcopy
 import multiprocessing as m
 
 
-def launch(
+def launch_local(
     baseline,
     variant,
     env_class,
