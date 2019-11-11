@@ -123,12 +123,12 @@ class SAC(Algorithm):
             self.record("alpha_loss", alpha_loss.numpy())
 
         # back prop gradients
+        self.policy.apply_gradients(
+            self.policy.compute_gradients(policy_loss, tape))
         self.qf1.apply_gradients(
             self.qf1.compute_gradients(qf1_loss, tape))
         self.qf2.apply_gradients(
             self.qf2.compute_gradients(qf2_loss, tape))
-        self.policy.apply_gradients(
-            self.policy.compute_gradients(policy_loss, tape))
         self.alpha_optimizer.apply_gradients(
             zip(tape.gradient(alpha_loss, [self.log_alpha]), [self.log_alpha]))
 

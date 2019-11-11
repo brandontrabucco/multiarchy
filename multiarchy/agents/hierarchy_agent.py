@@ -22,7 +22,7 @@ class HierarchyAgent(Agent):
     ):
         # handle pickle actions so the agent can be sent between threads
         state = Agent.__getstate__(self)
-        return dict(agents=[pkl.dump(agent) for agent in self.agents], **state)
+        return dict(agents=[pkl.dumps(agent) for agent in self.agents], **state)
 
     def __setstate__(
             self,

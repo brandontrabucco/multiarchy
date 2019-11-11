@@ -88,11 +88,11 @@ class DDPG(Algorithm):
             self.record("policy_loss", policy_loss.numpy())
 
         # back prop gradients
-        self.qf.apply_gradients(
-            self.qf.compute_gradients(qf_loss, tape))
         self.policy.apply_gradients(
             self.policy.compute_gradients(policy_loss, tape))
+        self.qf.apply_gradients(
+            self.qf.compute_gradients(qf_loss, tape))
 
         # soft update target parameters
-        self.target_qf.soft_update(self.qf.get_weights())
         self.target_policy.soft_update(self.policy.get_weights())
+        self.target_qf.soft_update(self.qf.get_weights())
