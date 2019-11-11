@@ -22,7 +22,6 @@ pip install -e multiarchy
 
 We require a few packages for training:
 
-* Ray 0.7.5 is tested and working
 * Mujoco 2.0 should be installed on the machine running training
 * TensorFlow 2.0 should be installed on the machine running training
 
