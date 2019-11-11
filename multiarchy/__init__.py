@@ -19,17 +19,13 @@ def maybe_initialize_process(use_gpu=True):
         m.set_start_method('spawn', force=True)
 
         if use_gpu:
-
             # prevent any process from consuming all gpu memory
             for gpu in tf.config.experimental.list_physical_devices('GPU'):
                 tf.config.experimental.set_memory_growth(gpu, True)
 
         else:
-
             # prevent any process from consuming any gpu memory
             tf.config.experimental.set_visible_devices([], 'GPU')
-
-
 
 
 def nested_apply(

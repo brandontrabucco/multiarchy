@@ -73,6 +73,9 @@ class PathReplayBuffer(ReplayBuffer):
             time_skip=1,
             hierarchy_selector=(lambda x: x)
     ):
+        # handle cases when we want to sample everything
+        batch_size = batch_size if batch_size > 0 else self.size
+
         # determine which steps to sample from
         idx = np.random.choice(
             self.size, size=batch_size, replace=(self.size < batch_size))

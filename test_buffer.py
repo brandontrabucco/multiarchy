@@ -18,15 +18,28 @@ if __name__ == "__main__":
 
     # create a replay buffer to store data
     replay_buffer = StepReplayBuffer(
-        max_num_steps=1000000)
+        max_num_steps=1000)
 
-    replay_buffer.insert_path(
-        [{"observation": np.array(1), "goal": np.array(1)},
-         {"observation": np.array(2), "goal": np.array(2)},
-         {"observation": np.array(3), "goal": np.array(3)},
-         {"observation": np.array(4), "goal": np.array(4)}],
-        [np.array(-1), np.array(-2), np.array(-3), np.array(-4)],
-        [np.array(-.1), np.array(-.2), np.array(-.3), np.array(-.4)])
+    observations = []
+    actions = []
+    rewards = []
+
+    for j in range(10):
+
+        for i in range(1000):
+
+            observation = {"observation": np.array(i), "goal": np.array(i)}
+            action = np.array(-i)
+            reward = np.array(-i / 10)
+
+            observations.append(observation)
+            actions.append(action)
+            rewards.append(reward)
+
+        replay_buffer.insert_path(
+            observations,
+            actions,
+            rewards)
 
     obs, act, rew, next_obs, term = replay_buffer.sample(8)
 

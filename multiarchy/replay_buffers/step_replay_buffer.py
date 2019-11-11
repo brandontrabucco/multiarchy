@@ -71,6 +71,9 @@ class StepReplayBuffer(ReplayBuffer):
             time_skip=1,
             hierarchy_selector=(lambda x: x)
     ):
+        # handle cases when we want to sample everything
+        batch_size = batch_size if batch_size > 0 else self.size
+
         # sample transition for a hierarchy of policies
         idx = np.random.choice(
             self.size, size=batch_size, replace=(self.size < batch_size))

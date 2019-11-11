@@ -3,15 +3,15 @@
 
 from multiarchy.launch import launch_local
 from multiarchy.baselines.ddpg import ddpg, ddpg_variant
-from gym.envs.mujoco.hopper import HopperEnv
+from multiarchy.envs.pointmass_env import PointmassEnv
 
 
 if __name__ == "__main__":
 
     # parameters for the learning experiment
     variant = dict(
-        max_num_steps=1000000,
-        logging_dir="hopper/ddpg/",
+        max_num_steps=10000,
+        logging_dir="pointmass/ddpg/",
         hidden_size=400,
         num_hidden_layers=2,
         reward_scale=1.0,
@@ -21,11 +21,11 @@ if __name__ == "__main__":
         tau=0.005,
         exploration_noise_std=0.1,
         batch_size=256,
-        max_path_length=500,
+        max_path_length=10,
         num_workers=2,
-        num_warm_up_steps=5000,
-        num_steps_per_epoch=500,
-        num_steps_per_eval=5000,
+        num_warm_up_steps=100,
+        num_steps_per_epoch=10,
+        num_steps_per_eval=100,
         num_epochs_per_eval=10,
         num_epochs=10000)
 
@@ -36,5 +36,5 @@ if __name__ == "__main__":
     launch_local(
         ddpg,
         variant,
-        HopperEnv,
-        num_seeds=5)
+        PointmassEnv,
+        num_seeds=2)

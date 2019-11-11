@@ -3,7 +3,7 @@
 
 from multiarchy.launch import launch_local
 from multiarchy.baselines.ddpg import ddpg, ddpg_variant
-from gym.envs.mujoco.hopper import HopperEnv
+from multiarchy.envs.counter_env import CounterEnv
 
 
 if __name__ == "__main__":
@@ -11,12 +11,12 @@ if __name__ == "__main__":
     # parameters for the learning experiment
     variant = dict(
         max_num_steps=1000000,
-        logging_dir="hopper/ddpg/",
+        logging_dir="counter/ddpg/",
         hidden_size=400,
         num_hidden_layers=2,
         reward_scale=1.0,
         discount=0.99,
-        policy_learning_rate=0.0003,
+        policy_learning_rate=0.0,
         qf_learning_rate=0.0003,
         tau=0.005,
         exploration_noise_std=0.1,
@@ -36,5 +36,5 @@ if __name__ == "__main__":
     launch_local(
         ddpg,
         variant,
-        HopperEnv,
-        num_seeds=5)
+        CounterEnv,
+        num_seeds=1)

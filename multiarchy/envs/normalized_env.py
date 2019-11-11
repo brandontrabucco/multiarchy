@@ -15,36 +15,40 @@ def denormalize(data, space):
     lower_bound = space.low
     upper_bound = space.high
 
-    # replace elements of the boundaries that are infinite
-    lower_bound = np.where(
+    # check if the data boundaries are infinity
+    skip_normalization = np.logical_or(
         np.logical_or(np.isinf(lower_bound), np.less_equal(lower_bound, -1e9)),
-        -np.ones_like(lower_bound), lower_bound)
-    upper_bound = np.where(
-        np.logical_or(np.isinf(upper_bound), np.greater_equal(upper_bound, 1e9)),
-        np.ones_like(upper_bound), upper_bound)
+        np.logical_or(np.isinf(upper_bound), np.greater_equal(upper_bound, 1e9)))
 
-    # proceed with normalization
-    return np.clip(
-        lower_bound + (data + 1.0) * 0.5 * (
-            upper_bound - lower_bound), lower_bound, upper_bound)
+    if np.any(skip_normalization):
+        # the bounds are invalid so de normalization would overflow
+        return data
+
+    else:
+        # proceed with de normalization
+        return np.clip(
+            lower_bound + (data + 1.0) * 0.5 * (
+                upper_bound - lower_bound), lower_bound, upper_bound)
 
 
 def normalize(data, space):
     lower_bound = space.low
     upper_bound = space.high
 
-    # replace elements of the boundaries that are infinite
-    lower_bound = np.where(
+    # check if the data boundaries are infinity
+    skip_normalization = np.logical_or(
         np.logical_or(np.isinf(lower_bound), np.less_equal(lower_bound, -1e9)),
-        -np.ones_like(lower_bound), lower_bound)
-    upper_bound = np.where(
-        np.logical_or(np.isinf(upper_bound), np.greater_equal(upper_bound, 1e9)),
-        np.ones_like(upper_bound), upper_bound)
+        np.logical_or(np.isinf(upper_bound), np.greater_equal(upper_bound, 1e9)))
 
-    # proceed with normalization
-    return np.clip(
-        (data - lower_bound) * 2.0 / (
-            upper_bound - lower_bound) - 1.0, -1.0, 1.0)
+    if np.any(skip_normalization):
+        # the bounds are invalid so normalization would overflow
+        return data
+
+    else:
+        # proceed with normalization
+        return np.clip(
+            (data - lower_bound) * 2.0 / (
+                upper_bound - lower_bound) - 1.0, -1.0, 1.0)
 
 
 class NormalizedEnv(ProxyEnv):

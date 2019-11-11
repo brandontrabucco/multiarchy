@@ -74,6 +74,7 @@ def ddpg(
         std=variant["exploration_noise_std"])
     target_policy = policy.clone()
 
+    # create critics for each level in the hierarchy
     qf = Gaussian(
         dense(
             observation_dim + action_dim,

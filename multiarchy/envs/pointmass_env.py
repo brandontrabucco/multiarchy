@@ -11,13 +11,15 @@ class PointmassEnv(Env):
     def __init__(
         self,
         size=2,
-        order=2
+        order=2,
+        action_scale=0.1,
     ):
         self.observation_space = Dict({
             "observation": Box(-1.0 * np.ones([size * 2]), np.ones([size * 2]))})
         self.action_space = Box(-1.0 * np.ones([size]), np.ones([size]))
         self.size = size
         self.order = order
+        self.action_scale = action_scale
         self.position = np.zeros([self.size])
         self.goal = np.random.uniform(low=-1.0, high=1.0, size=[self.size])
 
@@ -34,8 +36,9 @@ class PointmassEnv(Env):
         action
     ):
         clipped_action = np.clip(action, -1.0 * np.ones([self.size]), np.ones([self.size]))
+        scaled_action = clipped_action * self.action_scale
         self.position = np.clip(
-            self.position + clipped_action, -1.0 * np.ones([self.size]), np.ones([self.size]))
+            self.position + scaled_action, -1.0 * np.ones([self.size]), np.ones([self.size]))
         reward = -1.0 * np.linalg.norm(self.position - self.goal, ord=self.order)
         return ({"observation": np.concatenate([self.position, self.goal], 0)},
                 reward, False, {})

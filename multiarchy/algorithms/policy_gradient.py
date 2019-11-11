@@ -14,7 +14,7 @@ class PolicyGradient(Algorithm):
             replay_buffer,
             reward_scale=1.0,
             discount=0.99,
-            input_selector=(lambda x: x["observation"]),
+            observation_key="observation",
             batch_size=32,
             update_every=1,
             update_after=0,
@@ -35,7 +35,7 @@ class PolicyGradient(Algorithm):
         self.policy = policy
 
         # select into the observation dictionary
-        self.input_selector = input_selector
+        self.observation_key = observation_key
 
         # control the scale and decay of the reward
         self.reward_scale = reward_scale
@@ -49,7 +49,7 @@ class PolicyGradient(Algorithm):
         terminals
     ):
         # select elements from the observation dictionary
-        observations = self.input_selector(observations)
+        observations = observations[self.observation_key]
 
         # update the policy gradient algorithm
         with tf.GradientTape() as tape:

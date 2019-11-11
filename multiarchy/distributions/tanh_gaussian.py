@@ -60,7 +60,8 @@ class TanhGaussian(Gaussian):
         *inputs
     ):
         # convert tanh gaussian samples to gaussian samples
-        gaussian_samples = tf.math.atanh(tanh_samples)
+        gaussian_samples = tf.math.atanh(
+            tf.clip_by_value(tanh_samples, -0.999, 0.999))
 
         # compute the log probability density under a gaussian
         log_probs = Gaussian.log_prob(self, gaussian_samples, *inputs)

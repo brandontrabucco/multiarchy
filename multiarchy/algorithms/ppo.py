@@ -20,12 +20,12 @@ class PPO(Algorithm):
             lamb=0.95,
             off_policy_updates=1,
             critic_updates=1,
-            input_selector=(lambda x: x["observation"]),
+            observation_key="observation",
             batch_size=32,
             update_every=1,
             update_after=0,
             logger=None,
-            logging_prefix="policy_gradient/"
+            logging_prefix="ppo/"
     ):
         # train a policy using the vanilla policy gradient
         Algorithm.__init__(
@@ -43,7 +43,7 @@ class PPO(Algorithm):
         self.vf = vf
 
         # select into the observation dictionary
-        self.input_selector = input_selector
+        self.observation_key = observation_key
 
         # control some parameters that are important for ppo
         self.reward_scale = reward_scale
@@ -61,7 +61,7 @@ class PPO(Algorithm):
         terminals
     ):
         # select elements from the observation dictionary sampled
-        observations = self.input_selector(observations)
+        observations = observations[self.observation_key]
 
         # train the value function using the discounted return
         for i in range(self.critic_updates):
