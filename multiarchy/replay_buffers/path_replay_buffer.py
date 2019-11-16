@@ -93,10 +93,9 @@ class PathReplayBuffer(ReplayBuffer):
         for j in range(time_skip):
             term_to_add = self.rewards[idx, j::time_skip, ...] * np.less_equal(
                 np.arange(self.max_path_length)[None, j::time_skip],
-                self.terminals[idx, None]).astype(np.float32)[..., None]
-            while term_to_add.shape[1] < rewards.shape[1]:
-                term_to_add = np.pad(term_to_add, [[0, 0], [0, 1]])
-            rewards = rewards + term_to_add
+                self.terminals[idx, None]).astype(np.float32)
+            rewards = rewards + np.pad(
+                term_to_add, [[0, 0], [0, rewards.shape[1] - term_to_add.shape[1]]])
 
         # determine if the step that has been sampled is valid
         terminals = np.less_equal(

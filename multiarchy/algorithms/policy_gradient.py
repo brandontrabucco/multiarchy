@@ -56,15 +56,15 @@ class PolicyGradient(Algorithm):
 
             # compute advantages using the sampled rewards
             discounted_returns = discounted_sum(rewards, self.discount)
-            self.record("discounted_returns", tf.reduce_mean(discounted_returns).numpy())
+            self.record("discounted_returns", tf.reduce_mean(discounted_returns))
             advantages = discounted_returns - tf.reduce_mean(discounted_returns)
-            self.record("advantages", tf.reduce_mean(advantages).numpy())
+            self.record("advantages", tf.reduce_mean(advantages))
 
             # compute the surrogate policy loss
             policy_log_prob = self.policy.log_prob(actions, observations)
-            self.record("policy_log_prob", tf.reduce_mean(policy_log_prob).numpy())
+            self.record("policy_log_prob", tf.reduce_mean(policy_log_prob))
             policy_loss = -tf.reduce_mean(policy_log_prob * advantages)
-            self.record("policy_loss", tf.reduce_mean(policy_loss).numpy())
+            self.record("policy_loss", policy_loss)
 
         # back prop gradients into the policy
         self.policy.apply_gradients(

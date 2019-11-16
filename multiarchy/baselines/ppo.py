@@ -138,13 +138,12 @@ def ppo(
             variant["num_steps_per_epoch"],
             deterministic=False,
             keep_data=True,
-            workers_to_use=1)
+            workers_to_use=variant["num_workers"])
         logger.record("train_mean_return", np.mean(train_returns))
 
         # insert the samples into the replay buffer
         for o, a, r in paths:
             replay_buffer.insert_path(o, a, r)
 
-        # train once each for the number of steps collected
-        for i in range(num_steps):
-            agent.train()
+        # train once with the on policy data
+        agent.train()
