@@ -4,7 +4,7 @@ MultiArchy is a framework for training deep multi-agent hierarchical policies. H
 
 # Features
 
-We currently implement the following algorithms:
+We aim to implement the following algorithms:
 
 * Monolithic: SAC, TD3, PPO
 * Hierarchical: HIRO, HAC, HiPPO
@@ -27,4 +27,4 @@ We require a few packages for training:
 
 # Research
 
-We are actively implementing more reinforcement learning algorithms, and using MultiArchy for internal research. Refer to `multiarchy/multiarchy/baselines` for reference on how to build your own hierarchy.
+We are actively implementing more reinforcement learning algorithms. Refer to `multiarchy/multiarchy/baselines` for reference on how to build your own hierarchy.
