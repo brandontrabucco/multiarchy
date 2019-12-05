@@ -12,7 +12,7 @@ if __name__ == "__main__":
     variant = dict(
         max_path_length=500,
         max_num_paths=1000,
-        logging_dir="hopper_test2/ppo/",
+        logging_dir="hopper_test2/ppo3/",
         hidden_size=400,
         num_hidden_layers=2,
         reward_scale=1.0,

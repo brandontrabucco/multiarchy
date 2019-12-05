@@ -123,10 +123,8 @@ class ParallelSampler(object):
 
         # return paths from the workers into the main process
         results = []
-        while len(results) < workers_to_use:
-            for q in self.collect_output_queues:
-                if not q.empty():
-                    results.append(q.get())
+        for q in self.collect_output_queues[:workers_to_use]:
+            results.append(q.get())
 
         # combine the paths returns and steps from each of the remote samplers
         paths = [path for item in results for path in item[0]]
