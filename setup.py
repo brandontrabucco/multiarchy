@@ -6,7 +6,7 @@ from setuptools import setup
 
 
 REQUIRED_PACKAGES = [
-    'tensorflow-gpu==2.0.0',
+    'tensorflow-gpu==2.1.0rc0',
     'numpy',
     'mujoco-py',
     'gym[all]',
@@ -19,4 +19,4 @@ setup(
     install_requires=REQUIRED_PACKAGES,
     include_package_data=True,
     packages=[p for p in find_packages() if p.startswith('multiarchy')],
-    description='Training Deep Multi-Agent Hierarchies With Reinforcement Learning.')
+    description='Deep Multi-Agent Hierarchies.')
