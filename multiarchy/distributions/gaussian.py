@@ -63,10 +63,10 @@ class Gaussian(Distribution):
         gaussian_samples = mean + tf.random.normal(tf.shape(mean)) * std
 
         # compute the log probability density of the samples
-        return gaussian_samples, 0.5 * tf.reduce_sum(
-            - ((gaussian_samples - mean) / std) ** 2
+        return gaussian_samples, tf.reduce_sum(
+            - 0.5 * ((gaussian_samples - mean) / std) ** 2
             - log_std
-            - tf.math.log(2 * math.pi), axis=(-1))
+            - 0.5 * tf.math.log(2 * math.pi), axis=(-1))
 
     def expected_value(
             self,
@@ -76,9 +76,9 @@ class Gaussian(Distribution):
         mean, log_std = self.get_parameters(*inputs)
 
         # compute the log probability density of the mean
-        return mean, 0.5 * tf.reduce_sum(
+        return mean, tf.reduce_sum(
             - log_std
-            - tf.math.log(2 * math.pi), axis=(-1))
+            - 0.5 * tf.math.log(2 * math.pi), axis=(-1))
 
     def log_prob(
             self,
@@ -90,7 +90,7 @@ class Gaussian(Distribution):
         std = tf.math.exp(log_std)
 
         # compute the log probability density of the samples
-        return 0.5 * tf.reduce_sum(
-            - ((gaussian_samples - mean) / std) ** 2
+        return tf.reduce_sum(
+            - 0.5 * ((gaussian_samples - mean) / std) ** 2
             - log_std
-            - tf.math.log(2 * math.pi), axis=(-1))
+            - 0.5 * tf.math.log(2 * math.pi), axis=(-1))
