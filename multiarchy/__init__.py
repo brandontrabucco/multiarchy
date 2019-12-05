@@ -45,19 +45,19 @@ def nested_apply(
         return [
             nested_apply(
                 function,
-                *x,) for x in zip(*structures)]
+                *x) for x in zip(*structures)]
 
     elif isinstance(structures[0], tuple):
         return tuple(
             nested_apply(
                 function,
-                *x,) for x in zip(*structures))
+                *x) for x in zip(*structures))
 
     elif isinstance(structures[0], set):
         return {
             nested_apply(
                 function,
-                *x,) for x in zip(*structures)}
+                *x) for x in zip(*structures)}
 
     elif isinstance(structures[0], dict):
         keys_list = structures[0].keys()
