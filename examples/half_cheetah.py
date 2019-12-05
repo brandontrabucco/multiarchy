@@ -16,7 +16,7 @@ if __name__ == "__main__":
         num_hidden_layers=2,
         reward_scale=1.0,
         discount=0.99,
-        initial_alpha=0.01,
+        initial_alpha=0.0,
         policy_learning_rate=0.0003,
         qf_learning_rate=0.0003,
         tau=0.005,
