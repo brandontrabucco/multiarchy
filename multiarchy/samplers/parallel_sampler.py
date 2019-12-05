@@ -50,19 +50,21 @@ def process_function(
     while not is_finished:
 
         # set the weights of the policy
-        sequential_sampler.set_weights(set_weights_input_queue.get())
+        if not set_weights_input_queue.empty():
+            sequential_sampler.set_weights(set_weights_input_queue.get())
 
         # collect k paths of samples and pass to the main process
-        (min_num_steps_to_collect,
-         deterministic,
-         save_data, render, render_kwargs) = collect_input_queue.get()
+        if not collect_input_queue.empty():
+            (min_num_steps_to_collect,
+             deterministic,
+             save_data, render, render_kwargs) = collect_input_queue.get()
 
-        # push results back to the main thread
-        collect_output_queue.put(
-            sequential_sampler.collect(
-                min_num_steps_to_collect,
-                deterministic=deterministic,
-                keep_data=save_data, render=render, render_kwargs=render_kwargs))
+            # push results back to the main thread
+            collect_output_queue.put(
+                sequential_sampler.collect(
+                    min_num_steps_to_collect,
+                    deterministic=deterministic,
+                    keep_data=save_data, render=render, render_kwargs=render_kwargs))
 
 
 class ParallelSampler(object):
