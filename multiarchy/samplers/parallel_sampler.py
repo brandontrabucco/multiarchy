@@ -16,6 +16,7 @@ def create_sampler_process(
     set_weights_input_queue = m.Queue(maxsize=max_buffer_size)
     collect_input_queue = m.Queue(maxsize=max_buffer_size)
     collect_output_queue = m.Queue(maxsize=max_buffer_size)
+
     m.Process(target=process_function, args=(
         env,
         agent,
@@ -23,6 +24,7 @@ def create_sampler_process(
         set_weights_input_queue,
         collect_input_queue,
         collect_output_queue)).start()
+
     return (set_weights_input_queue,
             collect_input_queue,
             collect_output_queue)
@@ -67,7 +69,7 @@ def process_function(
                     keep_data=save_data, render=render, render_kwargs=render_kwargs))
 
 
-class ParallelSampler(object):
+class ParallelSampler(Sampler):
 
     def __init__(
             self,
@@ -125,8 +127,10 @@ class ParallelSampler(object):
 
         # return paths from the workers into the main process
         results = []
-        for q in self.collect_output_queues[:workers_to_use]:
-            results.append(q.get())
+        while len(results) < workers_to_use:
+            for q in self.collect_output_queues:
+                if not q.empty():
+                    results.append(q.get())
 
         # combine the paths returns and steps from each of the remote samplers
         paths = [path for item in results for path in item[0]]
