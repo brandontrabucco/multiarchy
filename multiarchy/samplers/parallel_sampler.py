@@ -3,6 +3,7 @@
 
 from multiarchy import maybe_initialize_process
 from multiarchy.samplers.sequential_sampler import SequentialSampler
+from multiarchy.samplers.sampler import Sampler
 import multiprocessing as m
 
 

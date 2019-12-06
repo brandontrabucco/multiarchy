@@ -1,7 +1,10 @@
 """Author: Brandon Trabucco, Copyright 2019, MIT License"""
 
 
-class SequentialSampler(object):
+from multiarchy.samplers.sampler import Sampler
+
+
+class SequentialSampler(Sampler):
 
     def __init__(
             self,
