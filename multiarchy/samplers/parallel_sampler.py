@@ -5,6 +5,7 @@ from multiarchy import maybe_initialize_process
 from multiarchy.samplers.sequential_sampler import SequentialSampler
 from multiarchy.samplers.sampler import Sampler
 import multiprocessing as m
+import time
 
 
 def create_sampler_process(
@@ -51,6 +52,7 @@ def process_function(
     # loop until a termination signal is given to this thread
     is_finished = False
     while not is_finished:
+        time.sleep(0.1)
 
         # set the weights of the policy
         if not set_weights_input_queue.empty():
@@ -67,7 +69,9 @@ def process_function(
                 sequential_sampler.collect(
                     min_num_steps_to_collect,
                     deterministic=deterministic,
-                    keep_data=save_data, render=render, render_kwargs=render_kwargs))
+                    keep_data=save_data,
+                    render=render,
+                    render_kwargs=render_kwargs))
 
 
 class ParallelSampler(Sampler):
@@ -129,6 +133,7 @@ class ParallelSampler(Sampler):
         # return paths from the workers into the main process
         results = []
         while len(results) < workers_to_use:
+            time.sleep(0.1)
             for q in self.collect_output_queues:
                 if not q.empty():
                     results.append(q.get())
