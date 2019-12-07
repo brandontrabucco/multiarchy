@@ -16,7 +16,7 @@ import numpy as np
 
 
 hierarchy_sac_variant = dict(
-    max_num_steps=1000000,
+    max_num_steps=10000,
     logging_dir="./",
     num_hierarchy_levels=2,
     time_skip=10,

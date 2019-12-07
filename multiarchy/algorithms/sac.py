@@ -90,6 +90,7 @@ class SAC(Algorithm):
             self.record("target_qf1_value", tf.reduce_mean(target_qf1_value).numpy())
             target_qf2_value = self.target_qf2(inputs)[..., 0]
             self.record("target_qf2_value", tf.reduce_mean(target_qf2_value).numpy())
+
             qf_targets = tf.stop_gradient(
                 self.reward_scale * rewards + terminals * self.discount * (
                         tf.minimum(target_qf1_value,
@@ -102,6 +103,7 @@ class SAC(Algorithm):
             self.record("qf1_value", tf.reduce_mean(qf1_value).numpy())
             qf2_value = self.qf2(inputs)[..., 0]
             self.record("qf2_value", tf.reduce_mean(qf2_value).numpy())
+
             qf1_loss = tf.reduce_mean(tf.keras.losses.mean_squared_error(qf_targets, qf1_value))
             self.record("qf1_loss", qf1_loss.numpy())
             qf2_loss = tf.reduce_mean(tf.keras.losses.mean_squared_error(qf_targets, qf2_value))
@@ -113,10 +115,10 @@ class SAC(Algorithm):
             self.record("policy_qf1_value", tf.reduce_mean(policy_qf1_value).numpy())
             policy_qf2_value = self.qf2(inputs)[..., 0]
             self.record("policy_qf2_value", tf.reduce_mean(policy_qf2_value).numpy())
+
             policy_loss = tf.reduce_mean(alpha * log_pi - tf.minimum(
                 policy_qf1_value, policy_qf2_value))
             self.record("policy_loss", policy_loss.numpy())
-
             alpha_loss = -tf.reduce_mean(self.log_alpha * tf.stop_gradient(
                 log_pi + self.target_entropy))
             self.record("alpha_loss", alpha_loss.numpy())

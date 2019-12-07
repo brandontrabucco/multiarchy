@@ -14,6 +14,9 @@ def maybe_initialize_process(use_gpu=True):
     if not PROCESS_IS_INITIALIZED:
         PROCESS_IS_INITIALIZED = True
 
+        # set tensorflow to disable logging warnings
+        tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+
         # on startup ensure all processes are started using the spawn method
         # see https://github.com/tensorflow/tensorflow/issues/5448
         m.set_start_method('spawn', force=True)
