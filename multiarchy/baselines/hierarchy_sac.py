@@ -72,8 +72,8 @@ def hierarchy_sac(
         # create policies for each level in the hierarchy
         policy = TanhGaussian(
             dense(
-                observation_dim,
-                2 * (action_dim if level == 0 else observation_dim),
+                observation_dim + (0 if level == 0 else observation_dim),
+                2 * (observation_dim if level == 0 else action_dim),
                 hidden_size=variant["hidden_size"],
                 num_hidden_layers=variant["num_hidden_layers"]),
             optimizer_kwargs=dict(learning_rate=variant["policy_learning_rate"]),
@@ -83,7 +83,7 @@ def hierarchy_sac(
         # create critics for each level in the hierarchy
         qf1 = Gaussian(
             dense(
-                observation_dim + (action_dim if level == 0 else observation_dim),
+                observation_dim + (observation_dim if level == 0 else action_dim),
                 1,
                 hidden_size=variant["hidden_size"],
                 num_hidden_layers=variant["num_hidden_layers"]),
@@ -95,7 +95,7 @@ def hierarchy_sac(
         # create critics for each level in the hierarchy
         qf2 = Gaussian(
             dense(
-                observation_dim + (action_dim if level == 0 else observation_dim),
+                observation_dim + (observation_dim if level == 0 else action_dim),
                 1,
                 hidden_size=variant["hidden_size"],
                 num_hidden_layers=variant["num_hidden_layers"]),

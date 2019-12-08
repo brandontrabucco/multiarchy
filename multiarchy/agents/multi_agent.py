@@ -9,7 +9,7 @@ class MultiAgent(Agent):
 
     def __init__(
             self,
-            *agents,
+            agents,
             time_skip=1,
             algorithm=None
     ):

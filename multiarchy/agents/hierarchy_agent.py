@@ -9,7 +9,7 @@ class HierarchyAgent(Agent):
 
     def __init__(
             self,
-            *agents,
+            agents,
             time_skip=1
     ):
         Agent.__init__(self, time_skip=time_skip)
