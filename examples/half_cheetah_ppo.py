@@ -23,7 +23,6 @@ if __name__ == "__main__":
         critic_updates=32,
         policy_learning_rate=0.0001,
         vf_learning_rate=0.001,
-        exploration_noise_std=0.5,
         num_workers=10,
         num_steps_per_epoch=10000,
         num_steps_per_eval=10000,

@@ -27,7 +27,6 @@ ppo_variant = dict(
     critic_updates=32,
     policy_learning_rate=0.0003,
     vf_learning_rate=0.0003,
-    exploration_noise_std=0.1,
     num_workers=2,
     num_steps_per_epoch=10000,
     num_steps_per_eval=10000,
@@ -67,12 +66,11 @@ def ppo(
     policy = Gaussian(
         dense(
             observation_dim,
-            action_dim,
+            action_dim * 2,
             hidden_size=variant["hidden_size"],
-            num_hidden_layers=variant["num_hidden_layers"],
-            output_activation="tanh"),
+            num_hidden_layers=variant["num_hidden_layers"]),
         optimizer_kwargs=dict(learning_rate=variant["policy_learning_rate"]),
-        std=variant["exploration_noise_std"])
+        std=None)
     old_policy = policy.clone()
 
     # create critics for each level in the hierarchy

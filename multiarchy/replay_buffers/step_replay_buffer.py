@@ -106,5 +106,7 @@ class StepReplayBuffer(ReplayBuffer):
             inner_sample_last(self.terminals[:, 1]),
             inner_sample(self.terminals[:, 1])).astype(np.float32)
 
+        terminals = np.ones_like(terminals)
+
         # return the samples in a batch
         return observations, actions, rewards, next_observations, terminals
