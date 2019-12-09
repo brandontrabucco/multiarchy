@@ -9,6 +9,7 @@ from multiarchy.networks import dense
 from multiarchy.agents.policy_agent import PolicyAgent
 from multiarchy.agents.hierarchy_agent import HierarchyAgent
 from multiarchy.replay_buffers.step_replay_buffer import StepReplayBuffer
+from multiarchy.relabelers.goal_conditioned import GoalConditioned
 from multiarchy.loggers.tensorboard_logger import TensorboardLogger
 from multiarchy.savers.local_saver import LocalSaver
 from multiarchy.samplers.parallel_sampler import ParallelSampler
@@ -108,6 +109,12 @@ def hierarchy_sac(
             std=1.0)
         target_qf2 = qf2.clone()
 
+        # relabel the rewards of the lower level policies
+        relabeled_buffer = (
+            GoalConditioned(replay_buffer, reward_scale=0.0, goal_conditioned_scale=1.0)
+            if level < variant["num_hierarchy_levels"] - 1
+            else replay_buffer)
+
         # train the agent using soft actor critic
         algorithm = SAC(
             policy,
@@ -115,7 +122,7 @@ def hierarchy_sac(
             qf2,
             target_qf1,
             target_qf2,
-            replay_buffer,
+            relabeled_buffer,
             reward_scale=variant["reward_scale"],
             discount=variant["discount"],
             initial_alpha=variant["initial_alpha"],
