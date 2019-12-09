@@ -9,6 +9,7 @@ from multiarchy.networks import dense
 from multiarchy.agents.policy_agent import PolicyAgent
 from multiarchy.replay_buffers.step_replay_buffer import StepReplayBuffer
 from multiarchy.loggers.tensorboard_logger import TensorboardLogger
+from multiarchy.savers.local_saver import LocalSaver
 from multiarchy.samplers.parallel_sampler import ParallelSampler
 from multiarchy.algorithms.sac import SAC
 import numpy as np
@@ -121,6 +122,19 @@ def sac(
         algorithm=algorithm,
         observation_key=observation_key)
 
+    # create a saver to record training progress to the disk
+    saver = LocalSaver(
+        replay_buffer,
+        variant["logging_dir"],
+        policy=policy,
+        qf1=qf1,
+        qf2=qf2,
+        target_qf1=target_qf1,
+        target_qf2=target_qf2)
+
+    # load the networks if already trained
+    saver.load()
+
     # make a sampler to collect data to warm up the hierarchy
     sampler = ParallelSampler(
         env,
@@ -153,6 +167,9 @@ def sac(
                 keep_data=False,
                 workers_to_use=variant["num_workers"])
             logger.record("eval_mean_return", np.mean(eval_returns))
+
+            # save the replay buffer and the policies
+            saver.save()
 
         # collect more training samples
         sampler.set_weights(agent.get_weights())
