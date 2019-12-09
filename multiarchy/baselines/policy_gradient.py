@@ -10,6 +10,7 @@ from multiarchy.replay_buffers.path_replay_buffer import PathReplayBuffer
 from multiarchy.loggers.tensorboard_logger import TensorboardLogger
 from multiarchy.samplers.parallel_sampler import ParallelSampler
 from multiarchy.algorithms.policy_gradient import PolicyGradient
+from multiarchy.savers.local_saver import LocalSaver
 import numpy as np
 
 
@@ -86,6 +87,15 @@ def policy_gradient(
         algorithm=algorithm,
         observation_key=observation_key)
 
+    # create a saver to record training progress to the disk
+    saver = LocalSaver(
+        replay_buffer,
+        variant["logging_dir"],
+        policy=policy)
+
+    # load the networks if already trained
+    saver.load()
+
     # make a sampler to collect data to warm up the hierarchy
     sampler = ParallelSampler(
         env,
@@ -109,6 +119,9 @@ def policy_gradient(
                 keep_data=False,
                 workers_to_use=variant["num_workers"])
             logger.record("eval_mean_return", np.mean(eval_returns))
+
+            # save the replay buffer and the policies
+            saver.save()
 
         # collect more training samples
         sampler.set_weights(agent.get_weights())

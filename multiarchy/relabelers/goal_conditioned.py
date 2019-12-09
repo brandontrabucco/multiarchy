@@ -12,7 +12,7 @@ class GoalConditioned(Relabeler):
             replay_buffer,
             order=2,
             goal_conditioned_scale=1.0,
-            reward_scale=1.0,
+            reward_scale=0.0,
             observation_key="observation"
     ):
         # wrap a replay buffer and relabel samples from it
