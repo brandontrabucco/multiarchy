@@ -130,6 +130,9 @@ def hierarchy_sac(
         levels.append(PolicyAgent(
             policy,
             time_skip=variant["time_skip"] ** level,
+            goal_skip=(variant["time_skip"] ** (level + 1)
+                       if level < variant["num_hierarchy_levels"] - 1
+                       else variant["max_path_length"]),
             algorithm=algorithm,
             observation_key=observation_key))
 
