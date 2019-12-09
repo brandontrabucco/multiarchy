@@ -9,10 +9,12 @@ class Agent(ABC):
     def __init__(
             self,
             time_skip=1,
+            goal_skip=1,
             algorithm=None
     ):
         # a single agent in a graph of many agents
         self.time_skip = time_skip
+        self.goal_skip = goal_skip
         self.iteration = 0
         self.algorithm = algorithm
         self.action = None
@@ -44,6 +46,7 @@ class Agent(ABC):
             self.algorithm.fit(
                 self.iteration,
                 time_skip=self.time_skip,
+                goal_skip=self.goal_skip,
                 hierarchy_selector=hierarchy_selector)
 
     @abstractmethod

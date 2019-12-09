@@ -10,9 +10,11 @@ class HierarchyAgent(Agent):
     def __init__(
             self,
             agents,
-            time_skip=1
+            time_skip=1,
+            goal_skip=1,
+            algorithm=None
     ):
-        Agent.__init__(self, time_skip=time_skip)
+        Agent.__init__(self, goal_skip=goal_skip, time_skip=time_skip, algorithm=algorithm)
 
         # a struct to store key methods for a hierarchy level
         self.agents = agents

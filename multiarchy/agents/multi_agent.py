@@ -11,9 +11,10 @@ class MultiAgent(Agent):
             self,
             agents,
             time_skip=1,
+            goal_skip=1,
             algorithm=None
     ):
-        Agent.__init__(self, time_skip=time_skip, algorithm=algorithm)
+        Agent.__init__(self, goal_skip=goal_skip, time_skip=time_skip, algorithm=algorithm)
 
         # a list of several parallel agents
         self.agents = agents

@@ -13,9 +13,10 @@ class PolicyAgent(Agent):
             policy,
             observation_key="observation",
             time_skip=1,
+            goal_skip=1,
             algorithm=None
     ):
-        Agent.__init__(self, time_skip=time_skip, algorithm=algorithm)
+        Agent.__init__(self, goal_skip=goal_skip, time_skip=time_skip, algorithm=algorithm)
 
         # story the policy and a selector into the observation dictionary
         self.policy = policy
