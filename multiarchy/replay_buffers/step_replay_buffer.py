@@ -69,6 +69,7 @@ class StepReplayBuffer(ReplayBuffer):
             self,
             batch_size,
             time_skip=1,
+            goal_skip=1,
             hierarchy_selector=(lambda x: x)
     ):
         # handle cases when we want to sample everything
@@ -80,18 +81,18 @@ class StepReplayBuffer(ReplayBuffer):
 
         # force the samples to occur every time_skip
         idx = idx - self.terminals[idx, 0].astype(np.int32) % time_skip
-        next_idx = (idx + time_skip) % self.max_num_steps
+        next_idx = np.minimum(idx + time_skip, self.max_num_steps)
 
-        def inner_sample(data):
+        def sample_observations(data):
             return data[idx, ...]
 
-        def inner_sample_last(data):
+        def sample_observations_last(data):
             return data[next_idx, ...]
 
         # sample current batch from a nested structure
-        observations = nested_apply(inner_sample, self.observations)
+        observations = nested_apply(sample_observations, self.observations)
         observations["goal"] = hierarchy_selector(observations["goal"])
-        actions = hierarchy_selector(nested_apply(inner_sample, self.actions))
+        actions = hierarchy_selector(nested_apply(sample_observations, self.actions))
 
         # sum the rewards across the horizon where valid
         rewards = 0.0
@@ -100,13 +101,31 @@ class StepReplayBuffer(ReplayBuffer):
                 self.terminals[j, 1], self.terminals[idx, 1]).astype(np.float32))
 
         # sample current batch from a nested structure
-        next_observations = nested_apply(inner_sample_last, self.observations)
+        next_observations = nested_apply(sample_observations_last, self.observations)
         next_observations["goal"] = hierarchy_selector(next_observations["goal"])
-        terminals = np.equal(
-            inner_sample_last(self.terminals[:, 1]),
-            inner_sample(self.terminals[:, 1])).astype(np.float32)
+        terminals = np.ones([batch_size])
 
-        terminals = np.ones_like(terminals)
+        # force the achieved goals to occur every goal_skip
+        goal_idx = np.minimum(idx - self.terminals[idx, 0].astype(
+            np.int32) % goal_skip + goal_skip, self.max_num_steps)
+        next_goal_idx = np.minimum(next_idx - self.terminals[next_idx, 0].astype(
+            np.int32) % goal_skip + goal_skip, self.max_num_steps)
+
+        # sample observation goals achieved by the agent
+        def sample_goals(data):
+            return data[goal_idx, ...]
+
+        # sample observation goals achieved by the agent
+        def sample_goals_last(data):
+            return data[next_goal_idx, ...]
+
+        # sample current batch from a nested structure
+        achieved_goals = nested_apply(sample_goals, self.observations)
+        observations["achieved_goals"] = achieved_goals
+
+        # sample current batch from a nested structure
+        achieved_next_goals = nested_apply(sample_goals_last, self.observations)
+        next_observations["achieved_goals"] = achieved_next_goals
 
         # return the samples in a batch
         return observations, actions, rewards, next_observations, terminals

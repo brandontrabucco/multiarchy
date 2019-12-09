@@ -10,6 +10,7 @@ from multiarchy.agents.policy_agent import PolicyAgent
 from multiarchy.agents.hierarchy_agent import HierarchyAgent
 from multiarchy.replay_buffers.step_replay_buffer import StepReplayBuffer
 from multiarchy.loggers.tensorboard_logger import TensorboardLogger
+from multiarchy.savers.local_saver import LocalSaver
 from multiarchy.samplers.parallel_sampler import ParallelSampler
 from multiarchy.algorithms.sac import SAC
 import numpy as np
@@ -64,6 +65,9 @@ def hierarchy_sac(
     # create a logging instance
     logger = TensorboardLogger(
         replay_buffer, variant["logging_dir"])
+
+    # a dict to store models for saving to the disk
+    models_dict = {}
 
     # build a hierarchical agent that uses sac
     levels = []
@@ -129,8 +133,20 @@ def hierarchy_sac(
             algorithm=algorithm,
             observation_key=observation_key))
 
+        models_dict["policy_level{}".format(level)] = policy
+        models_dict["qf1_level{}".format(level)] = qf1
+        models_dict["qf2_level{}".format(level)] = qf2
+        models_dict["target_qf1_level{}".format(level)] = target_qf1
+        models_dict["target_qf2_level{}".format(level)] = target_qf2
+
     # create a hierarchy agent using the list of agents
     agent = HierarchyAgent(levels)
+
+    # create a saver to record training progress to the disk
+    saver = LocalSaver(
+        replay_buffer,
+        variant["logging_dir"],
+        **models_dict)
 
     # make a sampler to collect data to warm up the hierarchy
     sampler = ParallelSampler(
@@ -164,6 +180,9 @@ def hierarchy_sac(
                 keep_data=False,
                 workers_to_use=variant["num_workers"])
             logger.record("eval_mean_return", np.mean(eval_returns))
+
+            # save the replay buffer and the policies
+            saver.save()
 
         # collect more training samples
         sampler.set_weights(agent.get_weights())

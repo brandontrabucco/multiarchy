@@ -71,6 +71,7 @@ class PathReplayBuffer(ReplayBuffer):
             self,
             batch_size,
             time_skip=1,
+            goal_skip=1,
             hierarchy_selector=(lambda x: x)
     ):
         # handle cases when we want to sample everything
@@ -101,6 +102,16 @@ class PathReplayBuffer(ReplayBuffer):
         terminals = np.less_equal(
             np.arange(self.max_path_length)[None, ::time_skip],
             self.terminals[idx, None]).astype(np.float32)
+
+        # sample observation goals achieved by the agent
+        def sample_goals(data):
+            repeats = np.ceil(self.max_path_length / goal_skip)
+            return np.repeat(
+                data[idx, ::goal_skip, ...], repeats, axis=1)[:, ::time_skip, ...]
+
+        # sample current batch from a nested structure
+        achieved_goals = nested_apply(sample_goals, self.observations)
+        observations["achieved_goals"] = achieved_goals
 
         # return the samples in a batch
         return observations, actions, rewards, terminals
