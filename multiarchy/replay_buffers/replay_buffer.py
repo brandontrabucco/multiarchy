@@ -83,6 +83,7 @@ class ReplayBuffer(ABC):
             self,
             batch_size,
             time_skip=1,
+            goal_skip=1,
             hierarchy_selector=(lambda x: x)
     ):
         return NotImplemented
