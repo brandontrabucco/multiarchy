@@ -121,11 +121,11 @@ class StepReplayBuffer(ReplayBuffer):
 
         # sample current batch from a nested structure
         achieved_goals = nested_apply(sample_goals, self.observations)
-        observations["achieved_goals"] = achieved_goals
+        observations["achieved_goal"] = achieved_goals
 
         # sample current batch from a nested structure
         achieved_next_goals = nested_apply(sample_goals_last, self.observations)
-        next_observations["achieved_goals"] = achieved_next_goals
+        next_observations["achieved_goal"] = achieved_next_goals
 
         # return the samples in a batch
         return observations, actions, rewards, next_observations, terminals

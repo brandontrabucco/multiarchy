@@ -111,7 +111,7 @@ class PathReplayBuffer(ReplayBuffer):
 
         # sample current batch from a nested structure
         achieved_goals = nested_apply(sample_goals, self.observations)
-        observations["achieved_goals"] = achieved_goals
+        observations["achieved_goal"] = achieved_goals
 
         # return the samples in a batch
         return observations, actions, rewards, terminals

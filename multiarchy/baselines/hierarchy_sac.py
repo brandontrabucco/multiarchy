@@ -88,7 +88,8 @@ def hierarchy_sac(
         # create critics for each level in the hierarchy
         qf1 = Gaussian(
             dense(
-                observation_dim + (observation_dim if level == 0 else action_dim),
+                observation_dim + (0 if level == 0 else observation_dim) + (
+                    observation_dim if level == 0 else action_dim),
                 1,
                 hidden_size=variant["hidden_size"],
                 num_hidden_layers=variant["num_hidden_layers"]),
@@ -100,7 +101,8 @@ def hierarchy_sac(
         # create critics for each level in the hierarchy
         qf2 = Gaussian(
             dense(
-                observation_dim + (observation_dim if level == 0 else action_dim),
+                observation_dim + (0 if level == 0 else observation_dim) + (
+                    observation_dim if level == 0 else action_dim),
                 1,
                 hidden_size=variant["hidden_size"],
                 num_hidden_layers=variant["num_hidden_layers"]),
@@ -112,8 +114,7 @@ def hierarchy_sac(
         # relabel the rewards of the lower level policies
         relabeled_buffer = (
             GoalConditioned(replay_buffer, reward_scale=0.0, goal_conditioned_scale=1.0)
-            if level < variant["num_hierarchy_levels"] - 1
-            else replay_buffer)
+            if level > 0 else replay_buffer)
 
         # train the agent using soft actor critic
         algorithm = SAC(
@@ -131,15 +132,14 @@ def hierarchy_sac(
             observation_key=observation_key,
             batch_size=variant["batch_size"],
             logger=logger,
-            logging_prefix="sac_{}/".format(level))
+            logging_prefix="sac_level{}/".format(level))
 
         # create a single agent to manage the hierarchy
         levels.append(PolicyAgent(
             policy,
-            time_skip=variant["time_skip"] ** level,
-            goal_skip=(variant["time_skip"] ** (level + 1)
-                       if level < variant["num_hierarchy_levels"] - 1
-                       else variant["max_path_length"]),
+            time_skip=variant["time_skip"] ** (variant["num_hierarchy_levels"] - 1 - level),
+            goal_skip=(variant["time_skip"] ** (variant["num_hierarchy_levels"] - level)
+                       if level > 0 else variant["max_path_length"]),
             algorithm=algorithm,
             observation_key=observation_key))
 

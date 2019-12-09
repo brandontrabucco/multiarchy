@@ -31,12 +31,12 @@ class HER(Relabeler):
                     maxval=1.0,
                     dtype=tf.float32), self.relabel_probability)
 
-            original_goals = observation["goals"]
+            original_goals = observation["goal"]
             while len(mask.shape) < len(original_goals.shape):
                 mask = tf.expand_dims(mask, -1)
 
-            achieved_goals = observation["achieved_goals"][self.observation_key]
-            observation["goals"] = tf.where(
+            achieved_goals = observation["achieved_goal"][self.observation_key]
+            observation["goal"] = tf.where(
                 mask, achieved_goals, original_goals)
             return observation, actions, rewards, terminals
 
@@ -49,16 +49,16 @@ class HER(Relabeler):
                     maxval=1.0,
                     dtype=tf.float32), self.relabel_probability)
 
-            original_goals = observation["goals"]
-            next_original_goals = next_observation["goals"]
+            original_goals = observation["goal"]
+            next_original_goals = next_observation["goal"]
             while len(mask.shape) < len(original_goals.shape):
                 mask = tf.expand_dims(mask, -1)
 
-            achieved_goals = observation["achieved_goals"][self.observation_key]
-            observation["goals"] = tf.where(
+            achieved_goals = observation["achieved_goal"][self.observation_key]
+            observation["goal"] = tf.where(
                 mask, achieved_goals, original_goals)
 
-            next_achieved_goals = next_observation["achieved_goals"][self.observation_key]
-            next_observation["goals"] = tf.where(
+            next_achieved_goals = next_observation["achieved_goal"][self.observation_key]
+            next_observation["goal"] = tf.where(
                 mask, next_achieved_goals, next_original_goals)
             return observation, actions, rewards, terminals, next_observation
