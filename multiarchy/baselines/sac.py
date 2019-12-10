@@ -32,6 +32,7 @@ sac_variant = dict(
     num_warm_up_steps=10000,
     num_steps_per_epoch=1000,
     num_steps_per_eval=10000,
+    num_steps_per_gradient=1,
     num_epochs_per_eval=1,
     num_epochs=10000)
 
@@ -185,5 +186,5 @@ def sac(
             replay_buffer.insert_path(o, a, r)
 
         # train once each for the number of steps collected
-        for i in range(num_steps):
+        for i in range(num_steps // variant["num_steps_per_gradient"]):
             agent.train()

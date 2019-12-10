@@ -26,6 +26,7 @@ if __name__ == "__main__":
         num_warm_up_steps=100000,
         num_steps_per_epoch=1000,
         num_steps_per_eval=50000,
+        num_steps_per_gradient=1,
         num_epochs_per_eval=10,
         num_epochs=10000)
 
