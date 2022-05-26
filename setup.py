@@ -6,7 +6,7 @@ from setuptools import setup
 
 
 REQUIRED_PACKAGES = [
-    'tensorflow-gpu==2.1.0rc0',
+    'tensorflow-gpu==2.7.2',
     'numpy',
     'mujoco-py',
     'gym[all]',
